@@ -101,7 +101,7 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
         return False
 
 if __name__ == '__main__':
-    SCP_DIR = "/content/SepReformer-main/data/scp_ss_8k_jacappella"
-    TEST_LIST = "/content/jaCappella/test_song_list_for_vocal_ensemble_separation.txt"
+    SCP_DIR = "/kaggle/working/data/scp_ss_8k_jacappella"
+    TEST_LIST = "/kaggle/working/jaCappella/test_song_list_for_vocal_ensemble_separation.txt"
     
     validate_sepacap_standard(SCP_DIR, TEST_LIST)

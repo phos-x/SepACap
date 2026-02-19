@@ -57,8 +57,8 @@ def generate_jacappella_manifests(root_dir: str, output_dir: str, test_list_path
 
 if __name__ == '__main__':
     # Platform-specific paths
-    DATA_ROOT = "/content/jaCappella"
-    SCP_OUT = "/content/SepReformer-main/data/scp_ss_8k_jacappella"
-    TEST_LIST = "/content/jaCappella/test_song_list_for_vocal_ensemble_separation.txt"
+    DATA_ROOT = "/kaggle/working/jaCappella"
+    SCP_OUT = "/kaggle/working/data/scp_ss_8k_jacappella"
+    TEST_LIST = "/kaggle/working/jaCappella/test_song_list_for_vocal_ensemble_separation.txt"
 
     generate_jacappella_manifests(DATA_ROOT, SCP_OUT, TEST_LIST)

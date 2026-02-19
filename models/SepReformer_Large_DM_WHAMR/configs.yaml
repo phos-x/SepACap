@@ -2,7 +2,7 @@ config:
     dataset:
         max_len : 32000
         sampling_rate: 8000
-        scp_dir: "data//content/SepReformer-main/data/scp_ss_8k_whamr"
+        scp_dir: "data//kaggle/working/SepACap/data/scp_ss_8k_whamr"
         train:
             mixture: "tr_mix.scp"
             spk1: "tr_s1.scp"

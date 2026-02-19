@@ -23,13 +23,21 @@ For every mixture file, there **must** be a corresponding clean source file for 
 | **Minimum Length** | 1024 Samples | Prevents "Kernel size > input size" convolution crashes. |
 | **Stride Rule** | Multiple of 4 | Matches the downsampling factor of the Transformer stages. |
 
+- Mandatory Resampling: Raw jaCappella data is provided at 48kHz. Before manifest generation, all files must be downsampled to 8kHz. Failure to do so results in an SR Mismatch error during validation and invalid spectral loss gradients during training.
+
+- Kernel Alignment: The STFT module in your criterions.py uses fixed window sizes (512, 1024, 2048). At 8kHz, these windows represent roughly 64ms to 256ms of audio, which is the "sweet spot" for capturing vocal transients and vibrato.
+
+- Power Set Consistency: When the dataset.py sums multiple stems for the Power Set augmentation, all stems must have the same sampling rate to avoid alignment drift.
+
+- Memory Optimization: Reducing the sample rate from 48kHz to 8kHz reduces your memory footprint by 6x, which is vital for maintaining the batch_size: 2 on standard Kaggle GPUs.
+
 ---
 
 ## 2. Dataset Preparation & Manifesting
 
 We use `.scp` files to index the data. To avoid the "Manifest Mismatch" errors, follow this protocol:
 
-1. **Normalization:** Use **Absolute Paths** in `.scp` files (e.g., `/content/data/sample.wav`). This prevents "File Not Found" errors when the script moves between directories.
+1. **Normalization:** Use **Absolute Paths** in `.scp` files (e.g., `/kaggle/working/data/sample.wav`). This prevents "File Not Found" errors when the script moves between directories.
 2. **Synchronization:** Use a **Force Alignment** script. Never assume the folders match; always use a script to intersect the filenames and create manifests that are perfect "twins."
 3. **The Index-Matching Logic:** Our updated `dataset.py` ignores filename prefixes (like `050_` vs `051_`) and links files purely by their position in the sorted list.
 
@@ -73,7 +81,7 @@ We implemented three specialized "Shields" in the code to handle the errors we e
 
 * [ ] **Validate SR:** Are all files strictly 8000Hz?
 * [ ] **Check Counts:** Do all data folders have the same number of files?
-* [ ] **Absolute Paths:** Does your `.scp` file start with `/content/...`?
+* [ ] **Absolute Paths:** Does your `.scp` file start with `/kaggle/working/...`?
 * [ ] **GPU Memory:** If you hit "Out of Memory," reduce `batch_size` in `configs.yaml` from `2` to `1`.
 * [ ] **Retries:** Use the provided Bash Loop to handle temporary system hiccups or Google Colab timeouts.
 
