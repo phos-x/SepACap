@@ -1,25 +1,43 @@
-project: "[Project] SepReformer" ### Dont't change
-notes: "SepReformer final version" ### Insert schanges(plz write details !!!)
+project: "[Project] SepReformer"
+notes: >
+  SepACap adaptation for jaCappella:
+  1. Updated to 6 output stems (alto, bass, lead, soprano, tenor, perc).
+  2. Integrated SNAKE periodic activations for harmonic modeling[cite: 41, 52].
+  3. Switched to Composite Loss (Waveform, Mel, Spectral) for silence-awareness[cite: 42, 60].
+  4. Enabled Power Set Dynamic Mixing for variable singer counts[cite: 43, 65].
+
 # ------------------------------------------------------------------------------------------------------------------------------ #
 config:
     # ------------------------------------------------------------ #
     dataset:
-        max_len: 32000
+        [cite_start]max_len: 32000             # 4-second snippets at 8kHz [cite: 75]
         sampling_rate: 8000
-        scp_dir: "data/scp_ss_8k"
+        scp_dir: "/content/SepReformer-main/data/scp_ss_8k_jacappella"
         train:
-            mixture: "tr_mix.scp"
-            spk1: "tr_s1.scp"
-            spk2: "tr_s2.scp"
-            dynamic_mixing: false
+            mixture: "tr_mixture.scp"
+            spk1: "tr_alto.scp"
+            spk2: "tr_bass.scp"
+            spk3: "tr_lead_vocal.scp"
+            spk4: "tr_soprano.scp"
+            spk5: "tr_tenor.scp"
+            spk6: "tr_vocal_percussion.scp"
+            [cite_start]dynamic_mixing: true   # Enables Power Set Augmentation [cite: 43, 65]
         valid:
-            mixture: "cv_mix.scp"
-            spk1: "cv_s1.scp"
-            spk2: "cv_s2.scp"
+            mixture: "cv_mixture.scp"
+            spk1: "cv_alto.scp"
+            spk2: "cv_bass.scp"
+            spk3: "cv_lead_vocal.scp"
+            spk4: "cv_soprano.scp"
+            spk5: "cv_tenor.scp"
+            spk6: "cv_vocal_percussion.scp"
         test:
-            mixture: "tt_mix.scp"
-            spk1: "tt_s1.scp"
-            spk2: "tt_s2.scp"
+            mixture: "tt_mixture.scp"
+            spk1: "tt_alto.scp"
+            spk2: "tt_bass.scp"
+            spk3: "tt_lead_vocal.scp"
+            spk4: "tt_soprano.scp"
+            spk5: "tt_tenor.scp"
+            spk6: "tt_vocal_percussion.scp"
     # ------------------------------------------------------------ #
     dataloader:
         batch_size: 2
@@ -28,19 +46,20 @@ config:
         drop_last: false
     # ------------------------------------------------------------ #
     model:
-        num_stages: &var_model_num_stages 4 # R
-        num_spks: &var_model_num_spks 2
+        num_stages: &var_model_num_stages 4
+        [cite_start]num_spks: &var_model_num_spks 6    # Expanded to 6 stems 
+        [cite_start]activation: "SNAKE"               # SnaKE activation for periodic singing [cite: 41, 52]
         module_audio_enc:
             in_channels: 1
             out_channels: &var_model_audio_enc_out_channels 256
-            kernel_size: &var_model_audio_enc_kernel_size 16 # L
-            stride: &var_model_audio_enc_stride 4 # S
+            kernel_size: &var_model_audio_enc_kernel_size 16
+            stride: &var_model_audio_enc_stride 4
             groups: 1
             bias: false
         module_feature_projector:
             num_channels: *var_model_audio_enc_out_channels 
             in_channels: *var_model_audio_enc_out_channels
-            out_channels: &feature_projector_out_channels 128 # F
+            out_channels: &feature_projector_out_channels 128
             kernel_size: 1
             bias: false
         module_separator:
@@ -93,32 +112,24 @@ config:
             bias: false
     # ------------------------------------------------------------ #
     criterion:
-        name: ["PIT_SISNR_mag", "PIT_SISNR_time", "PIT_SISNRi", "PIT_SDRi"] ### Choose a torch.nn's loss function class(=attribute) e.g. ["L1Loss", "MSELoss", "CrossEntropyLoss", ...]
-        PIT_SISNR_mag:
-            frame_length: 512
-            frame_shift: 128
-            window: 'hann'
-            num_stages: *var_model_num_stages
+        # Replaced SI-SDR with Composite Objective for silence handling [cite: 42, 53]
+        name: ["SepACapCompositeLoss"] 
+        SepACapCompositeLoss:
+            weights:
+                [cite_start]waveform: 1.0             # L1 time-domain loss 
+                [cite_start]mel: 0.7                  # Multi-scale Mel loss 
+                [cite_start]spectral: 0.3             # Multi-resolution spectral loss 
+            window_sizes: [512, 1024, 2048]
             num_spks: *var_model_num_spks
-            scale_inv: true
-            mel_opt: false
-        PIT_SISNR_time:
-            num_spks: *var_model_num_spks
-            scale_inv: true
-        PIT_SISNRi:
-            num_spks: *var_model_num_spks
-            scale_inv: true
-        PIT_SDRi:
-            dump: 0
     # ------------------------------------------------------------ #
     optimizer:
-        name: ["AdamW"] ### Choose a torch.optim's class(=attribute) e.g. ["Adam", "AdamW", "SGD", ...]
+        name: ["AdamW"]
         AdamW:
             lr: 1.0e-3
             weight_decay: 1.0e-2
     # ------------------------------------------------------------ #
     scheduler:
-        name: ["ReduceLROnPlateau", "WarmupConstantSchedule"] ### Choose a torch.optim.lr_scheduler's class(=attribute) e.g. ["StepLR", "ReduceLROnPlateau", "Custom"]
+        name: ["ReduceLROnPlateau", "WarmupConstantSchedule"]
         ReduceLROnPlateau:
             mode: "min"
             min_lr: 1.0e-10
@@ -132,7 +143,7 @@ config:
     # ------------------------------------------------------------ #
     engine:
         max_epoch: 200
-        gpuid: "0" ### "0"(single-gpu) or "0, 1" (multi-gpu)
+        gpuid: "0" 
         mvn: false
         clip_norm: 5
         start_scheduling: 50

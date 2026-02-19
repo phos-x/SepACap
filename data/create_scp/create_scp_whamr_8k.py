@@ -1,20 +1,20 @@
 import os
 
 
-train_mix_scp = 'scp_ss_8k_whamr/tr_mix.scp'
-train_s1_scp = 'scp_ss_8k_whamr/tr_s1.scp'
-train_s2_scp = 'scp_ss_8k_whamr/tr_s2.scp'
-train_s1_reverb_scp = 'scp_ss_8k_whamr/tr_s1_reverb.scp'
-train_s2_reverb_scp = 'scp_ss_8k_whamr/tr_s2_reverb.scp'
-train_n_scp = 'scp_ss_8k_whamr/tr_n.scp'
+train_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_mix.scp'
+train_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_s1.scp'
+train_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_s2.scp'
+train_s1_reverb_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_s1_reverb.scp'
+train_s2_reverb_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_s2_reverb.scp'
+train_n_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tr_n.scp'
 
 
-train_mix = '/home/work/data/WHAMR/tr/mix_both_reverb'
-train_s1 = '/home/work/data/WHAMR/tr/s1_anechoic'
-train_s2 = '/home/work/data/WHAMR/tr/s2_anechoic'
-train_s1_reverb = '/home/work/data/WHAMR/tr/s1_reverb'
-train_s2_reverb = '/home/work/data/WHAMR/tr/s2_reverb'
-train_n = '/home/work/data/WHAMR/tr/noise'
+train_mix = 'wsj0/si_tr_s/011'
+train_s1 = 'wsj0/si_tr_s/012'
+train_s2 = 'wsj0/si_tr_s/013'
+train_s1_reverb = 'wsj0/si_tr_s/014'
+train_s2_reverb = 'wsj0/si_tr_s/015'
+train_n = 'wsj0/si_tr_s/016'
 
 
 tr_mix = open(train_mix_scp,'w')
@@ -68,13 +68,13 @@ for root, dirs, files in os.walk(train_n):
 
 
 
-test_mix_scp = 'scp_ss_8k_whamr/tt_mix.scp'
-test_s1_scp = 'scp_ss_8k_whamr/tt_s1.scp'
-test_s2_scp = 'scp_ss_8k_whamr/tt_s2.scp'
+test_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tt_mix.scp'
+test_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tt_s1.scp'
+test_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/tt_s2.scp'
 
-test_mix = '/home/work/data/WHAMR/tt/mix_both_reverb'
-test_s1 = '/home/work/data/WHAMR/tt/s1_anechoic'
-test_s2 = '/home/work/data/WHAMR/tt/s2_anechoic'
+test_mix = 'wsj0/si_tr_s/017'
+test_s1 = 'wsj0/si_tr_s/018'
+test_s2 = 'wsj0/si_tr_s/019'
 
 tt_mix = open(test_mix_scp,'w')
 for root, dirs, files in os.walk(test_mix):
@@ -99,13 +99,13 @@ for root, dirs, files in os.walk(test_s2):
         tt_s2.write(file+" "+root+'/'+file)
         tt_s2.write('\n')
 
-cv_mix_scp = 'scp_ss_8k_whamr/cv_mix.scp'
-cv_s1_scp = 'scp_ss_8k_whamr/cv_s1.scp'
-cv_s2_scp = 'scp_ss_8k_whamr/cv_s2.scp'
+cv_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/cv_mix.scp'
+cv_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/cv_s1.scp'
+cv_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_whamr/cv_s2.scp'
 
-cv_mix = '/home/work/data/WHAMR/cv/mix_both_reverb'
-cv_s1 = '/home/work/data/WHAMR/cv/s1_anechoic'
-cv_s2 = '/home/work/data/WHAMR/cv/s2_anechoic'
+cv_mix = 'wsj0/si_tr_s/01a'
+cv_s1 = 'wsj0/si_tr_s/01b'
+cv_s2 = 'wsj0/si_tr_s/01c'
 
 cv_mix_file = open(cv_mix_scp,'w')
 for root, dirs, files in os.walk(cv_mix):

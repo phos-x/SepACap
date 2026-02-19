@@ -1,16 +1,16 @@
 import os
 
 
-train_mix_scp = 'scp_ss_8k_wham/tr_mix.scp'
-train_s1_scp = 'scp_ss_8k_wham/tr_s1.scp'
-train_s2_scp = 'scp_ss_8k_wham/tr_s2.scp'
-train_n_scp = 'scp_ss_8k_wham/tr_n.scp'
+train_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tr_mix.scp'
+train_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tr_s1.scp'
+train_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tr_s2.scp'
+train_n_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tr_n.scp'
 
 
-train_mix = '/home/work/data/WHAM/tr/mix_both'
-train_s1 = '/home/work/data/WHAM/tr/s1'
-train_s2 = '/home/work/data/WHAM/tr/s2'
-train_n = '/home/work/data/WHAM/tr/noise'
+train_mix = 'wsj0/si_dt_20/050'
+train_s1 = 'wsj0/si_dt_20/051'
+train_s2 = 'wsj0/si_dt_20/052'
+train_n = 'wsj0/si_dt_20/053'
 
 
 tr_mix = open(train_mix_scp,'w')
@@ -48,13 +48,13 @@ for root, dirs, files in os.walk(train_n):
 
 
 
-test_mix_scp = 'scp_ss_8k_wham/tt_mix.scp'
-test_s1_scp = 'scp_ss_8k_wham/tt_s1.scp'
-test_s2_scp = 'scp_ss_8k_wham/tt_s2.scp'
+test_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tt_mix.scp'
+test_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tt_s1.scp'
+test_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/tt_s2.scp'
 
-test_mix = '/home/work/data/WHAM/tt/mix_both'
-test_s1 = '/home/work/data/WHAM/tt/s1'
-test_s2 = '/home/work/data/WHAM/tt/s2'
+test_mix = 'wsj0/si_dt_20/22g'
+test_s1 = 'wsj0/si_dt_20/22h'
+test_s2 = 'wsj0/si_dt_20/420'
 
 tt_mix = open(test_mix_scp,'w')
 for root, dirs, files in os.walk(test_mix):
@@ -79,13 +79,13 @@ for root, dirs, files in os.walk(test_s2):
         tt_s2.write(file+" "+root+'/'+file)
         tt_s2.write('\n')
 
-cv_mix_scp = 'scp_ss_8k_wham/cv_mix.scp'
-cv_s1_scp = 'scp_ss_8k_wham/cv_s1.scp'
-cv_s2_scp = 'scp_ss_8k_wham/cv_s2.scp'
+cv_mix_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/cv_mix.scp'
+cv_s1_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/cv_s1.scp'
+cv_s2_scp = '/content/SepReformer-main/data/scp_ss_8k_wham/cv_s2.scp'
 
-cv_mix = '/home/work/data/WHAM/cv/mix_both'
-cv_s1 = '/home/work/data/WHAM/cv/s1'
-cv_s2 = '/home/work/data/WHAM/cv/s2'
+cv_mix = 'wsj0/si_dt_20/421'
+cv_s1 = 'wsj0/si_dt_20/422'
+cv_s2 = 'wsj0/si_dt_20/423'
 
 cv_mix_file = open(cv_mix_scp,'w')
 for root, dirs, files in os.walk(cv_mix):
