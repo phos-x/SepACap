@@ -26,7 +26,7 @@ class STFT(nn.Module):
         W = torch.hann_window(N) if window == 'hann' else torch.ones(N)
         S = 0.5 * (N * N / self.frame_shift)**0.5
         
-        # Pre-compute STFT kernel
+        # Pre-compute STFT kernel for speed
         K = torch.fft.rfft(torch.eye(N) / S, dim=1)[:N]
         K = torch.stack((torch.real(K), torch.imag(K)), dim=2)
         K = torch.transpose(K, 0, 2) * W 
@@ -53,7 +53,7 @@ class SepACapCompositeLoss(nn.Module):
         self.weights = weights
         self.l1 = nn.L1Loss()
         
-        # Multi-resolution Spectral setup (512, 1024, 2048)
+        # Multi-resolution Spectral setup (Standard: 512, 1024, 2048)
         self.spectral_ops = nn.ModuleList([
             STFT(self.device, w, w//4, 'hann') for w in window_sizes
         ])
@@ -76,21 +76,21 @@ class SepACapCompositeLoss(nn.Module):
                 # 1. Waveform L1 (Direct signal reconstruction)
                 l_wave = self.l1(est, tar)
                 
-                # 2. Multi-Resolution Spectral (Converges faster than time-domain alone)
+                # 2. Multi-Resolution Spectral Loss
                 l_spec = 0
                 for op in self.spectral_ops:
                     m_est, _ = op(est)
                     m_tar, _ = op(tar)
                     m_est, m_tar = sync_tensors(m_est, m_tar)
-                    # Log-magnitude + Magnitude L1
+                    # Magnitude L1 + Log-Magnitude L1
                     l_spec += self.l1(m_est, m_tar) + self.l1(torch.log(m_est + 1e-7), torch.log(m_tar + 1e-7))
                 
-                # 3. Mel Loss (Psychoacoustic weight)
-                m_est_mel, _ = self.spectral_ops[1](est) # Always use index 1 (1024 window)
+                # 3. Mel Loss (Psychoacoustic prioritization)
+                m_est_mel, _ = self.spectral_ops[1](est) # 1024-length context
                 m_tar_mel, _ = self.spectral_ops[1](tar)
                 l_mel = self.l1(self.mel_op(m_est_mel), self.mel_op(m_tar_mel))
                 
-                # Weighted Summation
+                # Composite aggregation using YAML-defined weights
                 l_total += (self.weights['waveform'] * l_wave) + \
                            (self.weights['spectral'] * l_spec / len(self.spectral_ops)) + \
                            (self.weights['mel'] * l_mel)
@@ -99,7 +99,7 @@ class SepACapCompositeLoss(nn.Module):
         # PIT: Find optimal permutation for the 6 vocal parts
         pscore = torch.stack([_calc_loss(p) for p in permutations(range(self.num_spks))])
         
-        # Batch normalization
+        # Normalize by batch size
         return torch.min(pscore) / input_sizes.shape[0]
 
 # --- Compatibility Wrappers ---
@@ -107,9 +107,17 @@ class PIT_SISNR_mag(SepACapCompositeLoss): pass
 class PIT_SISNR_time(SepACapCompositeLoss): pass
 
 class PIT_SISNRi:
-    def __init__(self, **kwargs): pass
-    def __call__(self, **kwargs): return torch.tensor(0.0, device='cuda'), torch.zeros(2)
+    """Metric Placeholder: Explicitly accepts device from CriterionFactory."""
+    def __init__(self, device: torch.device = None, **kwargs):
+        self.device = device if device else torch.device('cuda')
+        
+    def __call__(self, **kwargs): 
+        return torch.tensor(0.0, device=self.device), torch.zeros(2)
 
 class PIT_SDRi:
-    def __init__(self, **kwargs): pass
-    def __call__(self, **kwargs): return 0.0, np.zeros(2)
+    """Metric Placeholder: Explicitly accepts device from CriterionFactory."""
+    def __init__(self, device: torch.device = None, **kwargs):
+        self.device = device if device else torch.device('cuda')
+        
+    def __call__(self, **kwargs): 
+        return 0.0, np.zeros(2)
