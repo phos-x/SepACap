@@ -50,12 +50,7 @@ class AudioEncoder(nn.Module):
         self.act = get_activation(activation, out_channels)
     
     def forward(self, x: torch.Tensor):
-        # Handle various input shapes [B, T] or [B, C, T]
-        if x.dim() == 2:
-            x = x.unsqueeze(1)
-        elif x.dim() == 1:
-            x = x.unsqueeze(0).unsqueeze(0)
-            
+        x = x.unsqueeze(1) if x.dim() == 2 else x.unsqueeze(0).unsqueeze(0)
         x = self.conv1d(x)
         x = self.act(x)
         return x
@@ -76,7 +71,6 @@ class Separator(nn.Module):
         super().__init__()
         self.activation_type = activation
         
-        # Internal Definitions
         class RelativePositionalEncoding(nn.Module):
             def __init__(self, in_channels, num_heads, maxlen, embed_v=False):
                 super().__init__()
@@ -97,8 +91,13 @@ class Separator(nn.Module):
                 self.act = get_activation(activation, in_channels)
             
             def forward(self, x: torch.Tensor):
-                # Input: [B, C, T] -> Output: [B, C, T/2]
-                return self.act(self.BN(self.down_conv(x)))
+                # Strict adherence to original permute wrapping
+                x = x.permute([0, 2, 1])
+                x = self.down_conv(x)
+                x = self.BN(x)
+                x = self.act(x)
+                x = x.permute([0, 2, 1])
+                return x
 
         class SepEncStage(nn.Module):
             def __init__(self, global_blocks, local_blocks, down_conv_layer, down_conv=True, activation="SNAKE"):
@@ -110,31 +109,25 @@ class Separator(nn.Module):
                 self.downconv = DownConvLayer(**down_conv_layer, activation=activation) if down_conv else None
             
             def forward(self, x, pos_k):
-                # x enters as [B, C, T]
-                
-                # 1. Global Block (Transformer): Needs [B, T, C]
-                x = x.transpose(1, 2)
+                # Strict adherence to original architecture permutes
                 x = self.g_block_1(x, pos_k)
-                x = x.transpose(1, 2) # Back to [B, C, T]
-                
-                # 2. Local Block (CNN): Needs [B, C, T]
+                x = x.permute(0, 2, 1).contiguous()
                 x = self.l_block_1(x)
+                x = x.permute(0, 2, 1).contiguous()
                 
-                # 3. Global Block
-                x = x.transpose(1, 2)
                 x = self.g_block_2(x, pos_k)
-                x = x.transpose(1, 2)
-                
-                # 4. Local Block
+                x = x.permute(0, 2, 1).contiguous()
                 x = self.l_block_2(x)
+                x = x.permute(0, 2, 1).contiguous()
                 
-                skip = x # [B, C, T]
-                
+                skip = x
                 if self.downconv:
-                    x = self.downconv(x) # [B, C, T]
+                    x = x.permute(0, 2, 1).contiguous()
+                    x = self.downconv(x)
+                    x = x.permute(0, 2, 1).contiguous()
                 return x, skip
 
-        # Structure setup
+        # Main Setup
         self.num_stages = num_stages
         self.pos_emb = RelativePositionalEncoding(**relative_positional_encoding)
         
@@ -163,19 +156,16 @@ class Separator(nn.Module):
         x, _ = self.pad_signal(input)
         len_x = x.shape[-1]
         
-        # Positional Encoding Generation
         pos_seq = torch.arange(0, len_x // 2**self.num_stages).long().to(x.device)
         pos_seq = pos_seq[:, None] - pos_seq[None, :]
         pos_k, _ = self.pos_emb(pos_seq)
         
         skip = []
         for idx in range(self.num_stages):
-            # Pass x as [B, C, T] - Internal stages handle transposition
             x, skip_ = self.enc_stages[idx](x, pos_k)
+            skip_ = self.spk_split_block(skip_)
+            skip.append(skip_)
             
-            # SpkSplitStage expects [B, C, T], returns [B, Spk*C, T]
-            skip.append(self.spk_split_block(skip_))
-        
         x, _ = self.bottleneck_G(x, pos_k)
         x = self.spk_split_block(x)
         
@@ -183,14 +173,11 @@ class Separator(nn.Module):
         for idx in range(self.num_stages):
             each_stage_outputs.append(x)
             idx_en = self.num_stages - (idx + 1)
-            
-            # Interpolate and Concat work on [B, C, T]
             x = F.interpolate(x, size=skip[idx_en].shape[-1], mode='linear', align_corners=False)
-            x = self.simple_fusion[idx](torch.cat([x, skip[idx_en]], dim=1))
-            
-            # DecStage handles [B, C, T] -> [B, T, C] internally
+            x = torch.cat([x, skip[idx_en]], dim=1)
+            x = self.simple_fusion[idx](x)
             x, _ = self.dec_stages[idx](x, pos_k)
-        
+            
         return x, each_stage_outputs
 
     def pad_signal(self, input: torch.Tensor):
@@ -214,11 +201,10 @@ class SpkSplitStage(nn.Module):
         self.num_spks = num_spks
                 
     def forward(self, x: torch.Tensor):
-        # Input x: [B, C, T]
         x = self.linear(x)
         B, _, T = x.shape
         x = self.norm(x.view(B*self.num_spks, -1, T))
-        return x # Output: [B*Spk, C, T]
+        return x
 
 class SepDecStage(nn.Module):
     def __init__(self, num_spks, global_blocks, local_blocks, spk_attention, activation="SNAKE"):
@@ -235,24 +221,14 @@ class SepDecStage(nn.Module):
         self.num_spk = num_spks
     
     def forward(self, x, pos_k):
-        # x starts as [B, C, T]
         for gb, lb, sa in [(self.g_block_1, self.l_block_1, self.spk_attn_1), 
                            (self.g_block_2, self.l_block_2, self.spk_attn_2), 
                            (self.g_block_3, self.l_block_3, self.spk_attn_3)]:
-            
-            # Global (Transformer): [B, T, C]
-            x = x.transpose(1, 2)
             x = gb(x, pos_k)
-            x = x.transpose(1, 2)
-            
-            # Local (CNN): [B, C, T]
+            x = x.permute(0, 2, 1).contiguous()
             x = lb(x)
-            
-            # Spk Attention (Transformer-based): [B, T, C]
-            x = x.transpose(1, 2)
+            x = x.permute(0, 2, 1).contiguous()
             x = sa(x, self.num_spk)
-            x = x.transpose(1, 2)
-            
         return x, x
 
 class OutputLayer(nn.Module):
@@ -267,15 +243,20 @@ class OutputLayer(nn.Module):
             nn.Linear(int(2*out_channels), int(in_channels)))
             
     def forward(self, x, input):
-        # x comes in as [B, C, T]
-        # Linear layer works on last dim -> [B, T, C]
-        x = self.end_conv1x1(x[..., :input.shape[-1]].transpose(1, 2)).transpose(1, 2)
+        x = x[..., :input.shape[-1]]
+        x = x.permute([0, 2, 1])
+        x = self.end_conv1x1(x)
+        x = x.permute([0, 2, 1])
+        B, N, L = x.shape
+        B = B // self.num_spks
         
-        B = x.shape[0] // self.num_spks
         if self.masking:
-            inp_v = input.expand(self.num_spks, B, -1, -1).transpose(0, 1).reshape(B*self.num_spks, -1, x.shape[-1])
+            inp_v = input.expand(self.num_spks, B, N, L).transpose(0, 1).contiguous()
+            inp_v = inp_v.view(B*self.num_spks, N, L)
             x = self.spe_block(x, inp_v)
-        return x.view(B, self.num_spks, -1, x.shape[-1]).transpose(0, 1)
+            
+        x = x.view(B, self.num_spks, N, L)
+        return x.transpose(0, 1)
 
 class AudioDecoder(nn.ConvTranspose1d):
     def __init__(self, in_channels, out_channels, kernel_size, stride, bias):
