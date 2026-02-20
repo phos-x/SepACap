@@ -51,6 +51,7 @@ config:
             stride: &var_model_audio_enc_stride 4
             groups: 1
             bias: false
+            activation: "GELU"
         module_feature_projector:
             num_channels: *var_model_audio_enc_out_channels 
             in_channels: *var_model_audio_enc_out_channels
@@ -99,6 +100,7 @@ config:
             in_channels: *var_model_audio_enc_out_channels
             out_channels: *feature_projector_out_channels
             num_spks: *var_model_num_spks
+            masking: true
         module_audio_dec:
             in_channels: *var_model_audio_enc_out_channels
             out_channels: 1
@@ -107,7 +109,8 @@ config:
             bias: false
     # ------------------------------------------------------------ #
     criterion:
-        name: ["SepACapCompositeLoss"] 
+        # Padded names to align with Engine's unpacking (mag, time, sisnri, sdri)
+        name: ["SepACapCompositeLoss", "SepACapCompositeLoss", "PIT_SISNRi", "PIT_SDRi"] 
         SepACapCompositeLoss:
             weights:
                 waveform: 1.0             
@@ -115,6 +118,8 @@ config:
                 spectral: 0.3             
             window_sizes: [512, 1024, 2048]
             num_spks: *var_model_num_spks
+        PIT_SISNRi: {} 
+        PIT_SDRi: {}   
     # ------------------------------------------------------------ #
     optimizer:
         name: ["AdamW"]
