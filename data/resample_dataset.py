@@ -8,9 +8,7 @@ from tqdm import tqdm
 def resample_file(file_path, target_sr=8000):
     """Resamples a single file and overwrites it to save space."""
     try:
-        # Load audio (resampling during load is memory-efficient)
         y, _ = librosa.load(file_path, sr=target_sr)
-        # Overwrite the 48kHz file with the 8kHz version
         sf.write(file_path, y, target_sr)
         return True
     except Exception as e:
@@ -19,12 +17,10 @@ def resample_file(file_path, target_sr=8000):
 
 def batch_resample_dataset(root_dir, target_sr=8000):
     root = Path(root_dir)
-    # Find all .wav files in the nested structure
     all_wavs = list(root.rglob("*.wav"))
     
     print(f"Starting batch resampling of {len(all_wavs)} files to {target_sr}Hz...")
     
-    # Parallel execution to save time on Kaggle's multi-core CPU
     results = Parallel(n_jobs=-1)(
         delayed(resample_file)(str(p), target_sr) for p in tqdm(all_wavs)
     )

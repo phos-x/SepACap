@@ -33,7 +33,6 @@ def get_activation(act_name: str, channels: int):
         return nn.PReLU(channels)
     return nn.ReLU()
 
-# --- Main Architectural Modules ---
 
 class AudioEncoder(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, groups, bias, activation="GELU"):
@@ -127,7 +126,6 @@ class Separator(nn.Module):
                     x = x.permute(0, 2, 1).contiguous()
                 return x, skip
 
-        # Main Setup
         self.num_stages = num_stages
         self.pos_emb = RelativePositionalEncoding(**relative_positional_encoding)
         

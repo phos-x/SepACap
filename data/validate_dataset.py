@@ -6,7 +6,6 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-# DevOps Visibility Configuration
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger("DatasetValidator")
 
@@ -16,11 +15,9 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
     Validates the 7-file septuplet (1 mix + 6 stems) required for Power Set Augmentation.
     """
     scp_path = Path(scp_dir)
-    # Standard 6-stem ensemble + 1 Mixture input
     stems = ["alto", "bass", "lead_vocal", "soprano", "tenor", "vocal_percussion", "mixture"]
     partitions = ["tr", "cv", "tt"]
     
-    # 1. Leakage Prevention: Load the official experimental test split
     test_songs = set()
     if os.path.exists(test_list_path):
         with open(test_list_path, 'r', encoding='utf-8') as f:
@@ -30,7 +27,6 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
 
     for part in partitions:
         logger.info(f"--- Validating Partition: {part} ---")
-        # Registry tracks song IDs across all 7 manifests to ensure parallel alignment
         song_registry = {} 
         
         for stem in stems:
@@ -41,11 +37,9 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
                 continue
             
             with open(scp_file, 'r', encoding='utf-8') as f:
-                # Remove empty lines that cause RuntimeError in util_dataset.py
                 lines = [line.strip() for line in f if line.strip()]
                 
             for line in tqdm(lines, desc=f"Checking {stem}", leave=False):
-                # Robust split handles spaces in Kaggle directory paths
                 parts = line.split(maxsplit=1)
                 if len(parts) < 2:
                     logger.warning(f"Malformed manifest line (skipped): {line}")
@@ -53,21 +47,17 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
                 
                 song_id, audio_path = parts
                 
-                # Check A: Dataset Leakage (Security)
                 if part != "tt" and song_id in test_songs:
                     logger.error(f"Leakage: Song '{song_id}' found in {part} but is reserved for Test set.")
                     errors += 1
                 
-                # Check B: File System Integrity
                 if not os.path.exists(audio_path):
                     logger.error(f"Missing Audio: {audio_path}")
                     errors += 1
                     continue
                 
-                # Check C: Signal Processing Compatibility (Only verify once per song_id to save CPU)
                 if song_id not in song_registry:
                     try:
-                        # Load using header-only logic where possible for speed
                         sr = librosa.get_samplerate(audio_path)
                         
                         # 1. Sampling Rate Check (Requirement: 8000Hz)
@@ -117,7 +107,6 @@ def validate_sepacap_standard(scp_dir: str, test_list_path: str, target_sr=8000)
         return False
 
 if __name__ == '__main__':
-    # Configuration matches your specific Kaggle paths
     SCP_DIR = "/kaggle/working/SepACap/data/scp_ss_jacappella"
     TEST_LIST = "/kaggle/working/jaCappella/test_song_list_for_vocal_ensemble_separation.txt"
     

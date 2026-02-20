@@ -81,7 +81,6 @@ class SepACapCompositeLoss(nn.Module):
                 est_mags.append(mags)
                 est_mels.append(self.mel_op(mags[1]))
                 
-            # Build 6x6 Cost Matrix (36 pairs)
             for i in range(self.num_spks):
                 for j in range(self.num_spks):
                     est, tar = sync_tensors(estims[i], targets[j])
@@ -99,7 +98,6 @@ class SepACapCompositeLoss(nn.Module):
                                       (self.weights['spectral'] * l_spec / len(self.spectral_ops)) + \
                                       (self.weights['mel'] * l_mel)
                                       
-            # Find the best permutation out of the 720 options
             best_perm = None
             min_score = float('inf')
             for p in permutations(range(self.num_spks)):

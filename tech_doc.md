@@ -99,4 +99,134 @@ We implemented three specialized "Shields" in the code to handle the errors we e
 * [ ] **GPU Memory:** If you hit "Out of Memory," reduce `batch_size` in `configs.yaml` from `2` to `1`.
 * [ ] **Retries:** Use the provided Bash Loop to handle temporary system hiccups or Google Colab timeouts.
 
-**Would you like me to generate a "Quick Start" bash script that performs all these data checks and manifest syncs in one single command?**
+Here is the updated, comprehensive technical documentation for the **SepACap** architecture. This document reflects all the structural upgrades, memory optimizations, and dimensional alignments we have implemented.
+
+---
+
+# Technical Architecture 
+
+## 1. Overview
+
+**SepACap** is an advanced adaptation of the SepReformer architecture, specifically re-engineered for **multi-singer acapella source separation** (using the jaCappella dataset). Unlike standard speech separation models that isolate 2 speakers, SepACap isolates **6 distinct singing stems** (Alto, Bass, Lead Vocal, Soprano, Tenor, Vocal Percussion) simultaneously from a single monaural mixture.
+
+Key architectural upgrades include:
+
+* **Direct Waveform Modeling:** End-to-end processing in the time domain.
+* **Harmonic Extrapolation:** Utilization of **SNAKE** periodic activation functions to model musical pitch and harmonics.
+* **Two-Stage Detached PIT:** A highly optimized Permutation Invariant Training pipeline that prevents GPU Out-of-Memory (OOM) errors.
+* **Composite Loss:** A weighted combination of Waveform L1, Multi-Resolution Spectral L1, and Psychoacoustic Mel-scale Loss.
+
+---
+
+## 2. The Data Flow: Step-by-Step
+
+How a raw audio mixture transforms into 6 isolated stems.
+
+### Step 1: Input ingestion
+
+* **Input Shape:** `[Batch, 1, 24000]`
+* Raw audio is loaded at 8000 Hz. With a `max_len` of 24,000, the network processes exactly 3 seconds of audio per forward pass.
+
+### Step 2: Audio Encoder (`AudioEncoder`)
+
+* **Operation:** A 1D Convolution (`kernel_size=16`, `stride=4`) acts as a learned STFT/patcher.
+* **Activation:** GELU is applied to the extracted features.
+* **Shape Transition:** `[Batch, 1, 24000]`  `[Batch, 256, 6000]`
+
+### Step 3: Feature Projection (`FeatureProjector`)
+
+* **Operation:** Group Normalization followed by a  Convolution.
+* **Purpose:** Compresses the 256 channels down to 128 to save memory before entering the heavy Transformer blocks.
+* **Shape Transition:** `[Batch, 256, 6000]`  `[Batch, 128, 6000]`
+
+### Step 4: The Separator Engine (`Separator`)
+
+This is the core of the network, consisting of 4 Encoder Stages, a Bottleneck, and 4 Decoder Stages.
+
+* **Internal Transposition:** The network rigorously transposes tensors to satisfy different operational requirements:
+* **Global Blocks (Transformers):** Require sequence-first format `[Batch, Time, Channels]`. Captures long-range dependencies (e.g., song structure).
+* **Local Blocks (CNNs):** Require channel-first format `[Batch, Channels, Time]`. Captures local acoustic textures (e.g., breath sounds, consonants).
+
+
+* **Downsampling/Upsampling:** At each stage, the sequence length is halved (DownConv) and channels remain constant, building a multi-scale hierarchical representation.
+
+### Step 5: Speaker Splitting (`SpkSplitStage`)
+
+* **Operation:** A GLU-based gating network expands the separated latent features into 6 distinct latent spaces.
+* **Shape Transition:** `[Batch, 128, Time]`  `[Batch * 6, 128, Time]`
+
+### Step 6: Output Layer & Masking (`OutputLayer`)
+
+* **Operation:** The 6 separated latent spaces are mapped to estimated masks, which are multiplied back against the original Encoder features. This ensures only the vocal features belonging to a specific stem are passed through.
+
+### Step 7: Audio Decoder (`AudioDecoder`)
+
+* **Operation:** A 1D Transposed Convolution (Deconvolution) using the exact inverse parameters of the Encoder (`kernel=16`, `stride=4`).
+* **Shape Transition:** `[Batch * 6, 256, 6000]`  `[Batch, 6, 24000]`
+* **Output:** The final separated audio stems.
+
+---
+
+## 3. Loss Function: Detached PIT & Composite Loss
+
+Because calculating gradients for 6 stems yields 720 possible permutations, SepACap uses a **Two-Stage Detached Assignment** to prevent GPU memory crashes:
+
+1. **Stage 1 (No Gradients):** Calculates the pairwise distances between the 6 estimates and 6 targets (36 operations). It tests all 720 combinations purely in memory to find the mathematically optimal `best_perm`.
+2. **Stage 2 (With Gradients):** Builds the massive computational graph only for the 6 target-estimate pairs defined by the `best_perm`.
+
+**The Components of the Composite Loss:**
+
+* **Waveform L1 (Weight: 1.0):** Direct absolute error between the output audio and target audio.
+* **Mel Loss (Weight: 0.7):** Converts audio to an 80-bin Mel-spectrogram (mimicking human hearing) and calculates the error.
+* **Multi-Res Spectral (Weight: 0.3):** Uses 3 STFT window sizes (512, 1024, 2048) to calculate both Magnitude and Log-Magnitude L1 losses. This forces the model to learn both sharp transients (percussion) and sustained harmonics (vocals).
+
+---
+
+## 4. Configuration Breakdown (`configs.yaml`)
+
+### A. Dataset & Dataloader
+
+* `max_len` (24000): The maximum length of audio samples per chunk. Set to 3 seconds to optimize attention memory.
+* `sampling_rate` (8000): The Hz rate for the jaCappella dataset.
+* `scp_dir`: Path to the definition files linking audio paths to the training engine.
+* `dynamic_mixing` (true): Augments data by randomly mixing stems from different songs during training to prevent overfitting.
+* `batch_size` (1): The number of mixtures processed at once. Locked to 1 to fit the 6-stem architecture inside a 16GB GPU.
+* `num_workers` (12): How many CPU threads are dedicated to loading audio files from disk.
+
+### B. Model Dimensions
+
+* `num_stages` (4): The depth of the U-Net style Separator hierarchy.
+* `num_spks` (6): The number of target stems.
+* `activation` ("SNAKE"): The periodic activation function used inside the Separator blocks.
+* `module_audio_enc` / `module_audio_dec`:
+* `out_channels` (256): Number of latent feature maps.
+* `kernel_size` (16) & `stride` (4): Controls the time-resolution of the latent space.
+* `bias` (false): Excluded to prevent shifting the zero-mean audio signals.
+
+
+
+### C. Separator Modules
+
+* `relative_positional_encoding`: Injects timing information into the Transformer so it understands the sequence of audio chunks (`maxlen: 2000`).
+* `enc_stage` / `dec_stage`:
+* `num_mha_heads` (8): Number of attention heads in the Global Transformer blocks.
+* `kernel_size` (65): Receptive field of the Local CNN blocks. Large kernel captures wider acoustic context.
+* `dropout_rate` (0.05): Randomly zeroes out 5% of neurons during training to prevent memorization.
+
+
+
+### D. Criterion (Loss Setup)
+
+* `name`: `["SepACapCompositeLoss", "SepACapCompositeLoss", "PIT_SISNRi", "PIT_SDRi"]`. Padded array to satisfy the Engine's 4-metric unpacking expectation.
+* `weights`: Controls the priority of the loss functions (`waveform: 1.0`, `mel: 0.7`, `spectral: 0.3`).
+* `window_sizes`: `[512, 1024, 2048]`. The resolutions for the Multi-Res Spectral Loss.
+
+### E. Optimizer & Engine Configuration
+
+* `AdamW`: The optimizer used to update weights, configured with a learning rate (`lr: 1.0e-3`) and `weight_decay: 1.0e-2` for regularization.
+* `ReduceLROnPlateau`: Reduces the learning rate automatically if the validation loss stops improving for 2 epochs (`patience: 2`).
+* `WarmupConstantSchedule`: Slowly increases the learning rate for the first `1000` steps to prevent early divergence.
+* `max_epoch` (200): Total full passes over the dataset.
+* `clip_norm` (5): Prevents exploding gradients by capping their maximum value.
+
+---

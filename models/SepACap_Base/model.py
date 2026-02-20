@@ -24,7 +24,6 @@ class Model(nn.Module):
                  activation: str = "ReLU"):
         super().__init__()
         
-        # 1. Parameter Validation
         if num_stages <= 0 or num_spks <= 0:
             raise ValueError(f"Invalid model dimensions: stages={num_stages}, speakers={num_spks}")
             
@@ -32,11 +31,9 @@ class Model(nn.Module):
         self.num_spks = num_spks
         self.activation_type = activation
 
-        # 2. Inject Activation Choice into Separator Config
         if "activation" not in module_separator:
             module_separator["activation"] = self.activation_type
 
-        # 3. Main Processing Chain
         self.audio_encoder = AudioEncoder(**module_audio_enc)
         self.feature_projector = FeatureProjector(**module_feature_projector)
         self.separator = Separator(**module_separator)
@@ -60,25 +57,19 @@ class Model(nn.Module):
         Processes raw audio mixtures. 
         Targeting (Batch, Samples) -> (num_spks, Batch, Samples)
         """
-        # A. Feature Extraction
         encoder_output = self.audio_encoder(x)
         projected_feature = self.feature_projector(encoder_output)
         
-        # B. Separation Logic
         last_stage_output, each_stage_outputs = self.separator(projected_feature)
         
-        # C. Primary Source Reconstruction
         out_layer_output = self.out_layer(last_stage_output, encoder_output)
         
-        # Ensure audio outputs are synced with input length (DSA Shield)
         target_len = x.shape[-1]
         each_spk_output = [out_layer_output[idx] for idx in range(self.num_spks)]
         audio = [self.audio_decoder(out)[..., :target_len] for out in each_spk_output]
         
-        # D. Auxiliary Supervision (Multi-Resolution Spectral Loss support)
         audio_aux = []
         for idx, stage_out in enumerate(each_stage_outputs):
-            # Upsample stage features to match encoder resolution for masking
             upsampled = F.interpolate(
                 stage_out, 
                 size=encoder_output.shape[-1], 

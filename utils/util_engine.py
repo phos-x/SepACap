@@ -39,7 +39,7 @@ def load_last_checkpoint_n_get_epoch(checkpoint_dir, model, optimizer, location)
         model.load_state_dict(checkpoint_dict['model_state_dict'], strict=False)
         logger.info("Successfully loaded model state dict.")
     except RuntimeError as e:
-        # DSA Shield: Catch size mismatches (2-speaker vs 6-speaker weights)
+        # Shield: Catch size mismatches (2-speaker vs 6-speaker weights)
         logger.warning("Architecture Mismatch Detected! Checkpoint and Model have different dimensions.")
         logger.warning(f"Error Details: {str(e)[:200]}...")
         logger.warning("Initializing incompatible layers from scratch while retaining compatible ones.")
@@ -102,10 +102,9 @@ def model_params_mac_summary(model, input, dummy_input, metrics):
     if input.dim() == 3 and input.shape[1] == 1:
         input = input.squeeze(1)
 
-    # ptflops
+
     if 'ptflops' in metrics:
         try:
-            # ptflops expects (Channels, Length)
             macs, params = get_model_complexity_info(
                 model, (input.shape[1],), 
                 print_per_layer_stat=False, 
@@ -115,16 +114,13 @@ def model_params_mac_summary(model, input, dummy_input, metrics):
         except Exception as e:
             logger.warning(f"ptflops profiling failed: {e}")
 
-    # thop
     if 'thop' in metrics:
         try:
-            # thop requires explicit tuple wrapping
             macs, params = profile(model, inputs=(input, ), verbose=False)
             logger.info(f"thop: MACs: {macs/1e9:.2f} GMac, Params: {params/1e6:.2f}M")
         except Exception as e:
             logger.warning(f"thop profiling failed: {e}")
     
-    # torchinfo
     if 'torchinfo' in metrics:
         try:
             model_profile = summary_(model, input_size=input.size(), verbose=0)
