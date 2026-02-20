@@ -1,5 +1,3 @@
----
-
 # 🎙️ SepACap: 6-Stem Acapella Source Separation
 
 *An advanced adaptation of the NeurIPS 2024 **SepReformer** architecture, engineered specifically for multi-singer acapella extraction.*
