@@ -1,130 +1,102 @@
+Here is a completely rewritten, neat, and highly readable README tailored specifically for your **SepACap** project. It highlights your unique GitOps workflow, the 6-stem acapella separation goal, and pays homage to the original SepReformer architecture.
 
-# SepReformer for Speech Separation [NeurIPS 2024]
+---
 
+# 🎙️ SepACap: 6-Stem Acapella Source Separation
 
-This is the official implementation of “Separate and Reconstruct: Asymmetric Encoder-Decoder for Speech Separation” accepted in NeurIPS 2024 [Paper Link(Arxiv)](https://arxiv.org/abs/2406.05983)
+*An advanced adaptation of the NeurIPS 2024 **SepReformer** architecture, engineered specifically for multi-singer acapella extraction.*
 
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/separate-and-reconstruct-asymmetric-encoder/speech-separation-on-wsj0-2mix)](https://paperswithcode.com/sota/speech-separation-on-wsj0-2mix?p=separate-and-reconstruct-asymmetric-encoder)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/separate-and-reconstruct-asymmetric-encoder/speech-separation-on-wham)](https://paperswithcode.com/sota/speech-separation-on-wham?p=separate-and-reconstruct-asymmetric-encoder)
-[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/separate-and-reconstruct-asymmetric-encoder/speech-separation-on-whamr)](https://paperswithcode.com/sota/speech-separation-on-whamr?p=separate-and-reconstruct-asymmetric-encoder)
+SepACap takes a single monaural audio mixture and successfully isolates it into **6 distinct singing stems** (Alto, Bass, Lead Vocal, Soprano, Tenor, and Vocal Percussion) utilizing the jaCappella dataset.
 
+Unlike standard speech separation models that isolate 2 speakers, SepACap incorporates musical harmonic modeling via SNAKE periodic activations and a Two-Stage Detached Permutation Invariant Training (PIT) loss to prevent GPU memory limits during complex 6-factorial separation.
 
+---
 
+## ☁️ The GitOps Workflow (Kaggle + VSCode)
 
-## News
+This project is optimized for cloud execution rather than local hardware. It utilizes a modern **GitOps approach**, bridging local development in VSCode with heavy-duty training on **Kaggle Notebook GPUs**.
 
-🔥 October, 2024: We have added feature for single audio inference on our SepReformer-B for WSJ0-2MIX in `models/SepReformer_Base_WSJ0`. You can directly inference by your own samples!
+**How it works:**
 
-🔥 October, 2024: We have uploaded the pre-trained models of our SepReformer-B for WSJ0-2MIX in `models/SepReformer_Base_WSJ0/log/scratch_weight` folder! You can directly test the model using the inference command below.
+1. Code is edited and managed locally via **VSCode**.
+2. Updates are pushed to a Git repository.
+3. The **Kaggle Notebook** acts as the execution engine, pulling the latest repository changes directly into the GPU's storage environment.
+4. *Note: All primary execution steps, environment setups, and Git pulling commands are documented and run directly inside the provided Kaggle Notebook.*
+5. *You can check out steps to connect external editors like Colab or VSCode to the same Jupyter Server that powers your Kaggle notebook on kaggle official docs.*
 
-🔥 September 2024, Paper accepted at NeurIPS 2024 🎉.
+---
 
+## 📂 Repository Structure
 
-## Todo
-We are planning to release the other cases especially for partially or fully overlapped, noisy-reverberant mixture with 16k of sampling rates for practical application within this year.
+* **`📁 /data` (The Fuel):** Handles dataset preparation. Contains scripts to mix isolated singing stems into training mixtures and generates the lightweight `.scp` (Script) files that point the dataloader to the audio without crashing the RAM.
+* **`📁 /models` (The Brains):** The core neural network. Contains the specific model versions (e.g., `SepReformer_Base_WSJ0` which we adapted for SepACap), the PyTorch network `modules/`, the `configs.yaml` master control panel, and the `log/scratch_weights/` where the model saves its learned checkpoints.
+* **`📁 /sample_wav` (The Testing Ground):** The input/output tray for human evaluation. Drop a mixed song in here, and the network will spit out the 6 isolated `.wav` stems for you to listen to.
+* **`📁 /utils` (The Toolbox):** Contains the infrastructure scripts. Includes the `util_engine.py` (the training loop foreman), `util_implement.py` (the dynamic PyTorch object factory), and `criterions.py` (the custom Loss Functions).
 
+---
 
-![Untitled](data/figure/SepReformer_Architecture.png)
+## 🚀 Getting Started
 
-We  propose SepReformer, a novel approach to speech separation using an asymmetric encoder-decoder network. 
+### 1. Git LFS Requirement
 
-Demo Pages: [Sample Results of speech separation by SepReformer](https://dmlguq456.github.io/SepReformer_Demo/)
+This repository uses **Git LFS (Large File Storage)** to manage the massive pretrained model weight files (`.pth`). If Git LFS is not installed in your Kaggle environment before cloning, the weights will not download properly.
 
-
-## Environment Preparation
 ```bash
-conda create -n SepReformer python=3.10
-conda activate SepReformer
-pip install -r requirements.txt
+# Inside your Kaggle Notebook terminal/cell
+sudo apt update
+sudo apt install git-lfs
+git lfs install
+
 ```
 
+### 2. Execution Commands
 
-## Pretrained Models
+While the full pipeline is handled inside the Kaggle Notebook, here are the core commands used to trigger the engine via `run.py`:
 
-We offer a pretrained model for our SepReformer-B. (other models will be uploaded, soon)
+**To Train the Network:**
 
-This repository uses **Git LFS (Large File Storage)** to manage pretrained model files. If Git LFS is not installed, large files may not be downloaded properly. **Please install Git LFS before cloning this repository.**
+> *Make sure your `.scp` file paths are correctly set in `models/SepACap_Base/configs.yaml` before running.*
 
-- Installing and Setting Up Git LFS
+```bash
+python run.py --model SepACap_Base --engine-mode train
 
-1. **Install Git LFS**
-
-   Git LFS is an extension for Git that allows handling large files. You can install it, for example in Ubuntu, with the following commands:
-
-     ```bash
-     sudo apt update
-     sudo apt install git-lfs
-     ```
-2. **Initialize Git LFS**
-
-   Before cloning the repository, initialize Git LFS with the following command:
-
-   ```bash
-   git lfs install
-   ```   
-
-## Data Preparation
-
-- For training or evaluation, you need dataset and scp file
-    1. Prepare dataset for speech separation (eg. WSJ0-2mix)
-    2. create scp file using data/create_scp/*.py
-
-## Training
-
-- If you want to train the network, you can simply trying by
-    - set the scp file in ‘models/SepReformer_Base_WSJ0/configs.yaml’
-    - run training as
-        
-        ```bash
-        python run.py --model SepReformer_Base_WSJ0 --engine-mode train
-        ```
-
-### Inference on a single audio sample
-
-- Simply Inference on a single audio with output wav files saved
-
-    ```bash
-    python run.py --model SepReformer_Base_WSJ0 --engine-mode infer_sample --sample-file /to/your/sample/dir/
-    ```
-
-- For example, you can directly test by using the included sample as
-
-    ```bash
-    python run.py --model SepReformer_Base_WSJ0 --engine-mode infer_sample --sample-file ./sample_wav/sample_WSJ.wav
-    ```
-
-
-## Test on Dataset
-
-- Evaluating a model on dataset without saving output as audio files
-    
-    ```bash
-    python run.py --model SepReformer_Base_WSJ0 --engine-mode test
-    ```
-    
-
-- Evaluating on dataset with output wav files saved
-    
-    ```bash
-    python run.py --model SepReformer_Base_WSJ0 --engine-mode test_wav --out_wav_dir '/your/save/directoy[optional]'
-    ```
-    
-
-## Training Curve
-- For SepReformer-B with WSJ-2MIX, the training and validation curve is as follows:
-![Untitled](data/figure/Training_Curve.png)
-
-<br />
-<br />
-
-![Untitled](data/figure/Result_table.png)
-
-![Untitled](data/figure/SISNRvsMACs.png)
-
-## Citation
-
-If you find this repository helpful, please consider citing:
 ```
+
+**To Run Inference on a Single Song:**
+
+> *This will separate the audio and save the 6 output `.wav` files to your directory.*
+
+```bash
+python run.py --model SepACap_Base--engine-mode infer_sample --sample-file "filename"
+
+```
+
+**To Evaluate on the Test Dataset:**
+
+> *Runs validation metrics without saving the heavy audio files.*
+
+```bash
+python run.py --model SepACap_Base --engine-mode test
+
+```
+
+---
+
+## 🧠 Technical Highlights
+
+SepACap heavily modifies the base SepReformer with the following upgrades:
+
+* **SNAKE Activations:** Replaced standard ReLU/GELU in the separator blocks with periodic Snake activations to better extrapolate musical pitch and harmonics.
+* **Composite Loss:** A highly tuned loss function blending Waveform L1 (1.0), Psychoacoustic Mel-scale (0.7), and Multi-Res Spectral L1 (0.3).
+* **Two-Stage Detached PIT:** Optimizes the  (720) permutation calculations by detaching the gradient graph during the pairing phase, dropping VRAM usage from ~14GB to ~50MB during loss calculation.
+
+---
+
+## 📜 Acknowledgments & Citation
+
+SepACap is built upon the foundational research of **SepReformer**. If you find the core asymmetric encoder-decoder architecture helpful, please cite the original authors' NeurIPS 2024 paper:
+
+```bibtex
 @inproceedings{
 shin2024separate,
 title={Separate and Reconstruct: Asymmetric Encoder-Decoder for Speech Separation},
@@ -133,4 +105,5 @@ booktitle={The Thirty-eighth Annual Conference on Neural Information Processing 
 year={2024},
 url={https://openreview.net/forum?id=99y2EfLe3B}
 }
+
 ```
