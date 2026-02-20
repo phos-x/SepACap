@@ -7,7 +7,7 @@ config:
     dataset:
         max_len: 32000             
         sampling_rate: 8000
-        scp_dir: "/kaggle/working/SepACap/data/scp_ss_8k_jacappella"
+        scp_dir: "/kaggle/working/SepACap/data/scp_ss_jacappella"
         train:
             mixture: "tr_mixture.scp"
             spk1: "tr_alto.scp"
