@@ -38,11 +38,24 @@ def get_activation(act_name: str, channels: int):
 class AudioEncoder(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, groups, bias, activation="GELU"):
         super().__init__()
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, stride, groups, bias)
+        # TYPE SHIELD: Explicitly cast arguments to prevent tuple/bool type errors in F.conv1d
+        self.conv1d = nn.Conv1d(
+            in_channels=int(in_channels), 
+            out_channels=int(out_channels), 
+            kernel_size=int(kernel_size), 
+            stride=int(stride), 
+            groups=int(groups), 
+            bias=bool(bias)
+        )
         self.act = get_activation(activation, out_channels)
     
     def forward(self, x: torch.Tensor):
-        x = x.unsqueeze(1) if x.dim() == 2 else x.unsqueeze(0).unsqueeze(0)
+        # Handle various input shapes from profile/engine [B, T] or [B, C, T]
+        if x.dim() == 2:
+            x = x.unsqueeze(1)
+        elif x.dim() == 1:
+            x = x.unsqueeze(0).unsqueeze(0)
+            
         x = self.conv1d(x)
         x = self.act(x)
         return x
@@ -50,8 +63,8 @@ class AudioEncoder(nn.Module):
 class FeatureProjector(nn.Module):
     def __init__(self, num_channels, in_channels, out_channels, kernel_size, bias):
         super().__init__()
-        self.norm = nn.GroupNorm(1, num_channels, eps=1e-8)
-        self.conv1d = nn.Conv1d(in_channels, out_channels, kernel_size, bias=bias)
+        self.norm = nn.GroupNorm(1, int(num_channels), eps=1e-8)
+        self.conv1d = nn.Conv1d(int(in_channels), int(out_channels), int(kernel_size), bias=bool(bias))
     
     def forward(self, x: torch.Tensor):
         x = self.norm(x)
@@ -63,7 +76,7 @@ class Separator(nn.Module):
         super().__init__()
         self.activation_type = activation
         
-        # Internal Definitions for Enc/Dec Stages
+        # Internal Definitions
         class RelativePositionalEncoding(nn.Module):
             def __init__(self, in_channels, num_heads, maxlen, embed_v=False):
                 super().__init__()
@@ -79,8 +92,8 @@ class Separator(nn.Module):
         class DownConvLayer(nn.Module):
             def __init__(self, in_channels, samp_kernel_size, activation="SNAKE"):
                 super().__init__()
-                self.down_conv = nn.Conv1d(in_channels, in_channels, samp_kernel_size, stride=2, padding=(samp_kernel_size-1)//2, groups=in_channels)
-                self.BN = nn.BatchNorm1d(in_channels)
+                self.down_conv = nn.Conv1d(int(in_channels), int(in_channels), int(samp_kernel_size), stride=2, padding=(int(samp_kernel_size)-1)//2, groups=int(in_channels))
+                self.BN = nn.BatchNorm1d(int(in_channels))
                 self.act = get_activation(activation, in_channels)
             
             def forward(self, x: torch.Tensor):
@@ -105,12 +118,10 @@ class Separator(nn.Module):
                     x = self.downconv(x.transpose(1, 2)).transpose(1, 2)
                 return x, skip
 
-        # ------------------------------------------------------------
-        # Initializing Separator Structure
+        # Structure setup
         self.num_stages = num_stages
         self.pos_emb = RelativePositionalEncoding(**relative_positional_encoding)
         
-        # Sanitize configs to prevent "multiple values for keyword argument 'activation'"
         enc_clean = {k: v for k, v in enc_stage.items() if k != 'activation'}
         dec_clean = {k: v for k, v in dec_stage.items() if k != 'activation'}
 
@@ -123,7 +134,7 @@ class Separator(nn.Module):
         self.spk_split_block = SpkSplitStage(**spk_split_stage)
         
         self.simple_fusion = nn.ModuleList([
-            nn.Conv1d(simple_fusion['out_channels']*2, simple_fusion['out_channels'], 1) 
+            nn.Conv1d(int(simple_fusion['out_channels']*2), int(simple_fusion['out_channels']), 1) 
             for _ in range(num_stages)
         ])
         
@@ -174,10 +185,10 @@ class SpkSplitStage(nn.Module):
     def __init__(self, in_channels, num_spks):
         super().__init__()
         self.linear = nn.Sequential(
-            nn.Conv1d(in_channels, 4*in_channels*num_spks, 1),
+            nn.Conv1d(int(in_channels), int(4*in_channels*num_spks), 1),
             nn.GLU(dim=-2),
-            nn.Conv1d(2*in_channels*num_spks, in_channels*num_spks, 1))
-        self.norm = nn.GroupNorm(1, in_channels, eps=1e-8)
+            nn.Conv1d(int(2*in_channels*num_spks), int(in_channels*num_spks), 1))
+        self.norm = nn.GroupNorm(1, int(in_channels), eps=1e-8)
         self.num_spks = num_spks
                 
     def forward(self, x: torch.Tensor):
@@ -214,12 +225,11 @@ class OutputLayer(nn.Module):
         super().__init__()
         self.masking = masking
         self.num_spks = num_spks
-        # FIXED: Pass concat_opt=None to satisfy the network.py check
-        self.spe_block = Masking(in_channels, Activation_mask="ReLU", concat_opt=None)
+        self.spe_block = Masking(int(in_channels), Activation_mask="ReLU", concat_opt=None)
         self.end_conv1x1 = nn.Sequential(
-            nn.Linear(out_channels, 4*out_channels),
+            nn.Linear(int(out_channels), int(4*out_channels)),
             nn.GLU(),
-            nn.Linear(2*out_channels, in_channels))
+            nn.Linear(int(2*out_channels), int(in_channels)))
             
     def forward(self, x, input):
         x = self.end_conv1x1(x[..., :input.shape[-1]].transpose(1, 2)).transpose(1, 2)
@@ -230,6 +240,15 @@ class OutputLayer(nn.Module):
         return x.view(B, self.num_spks, -1, x.shape[-1]).transpose(0, 1)
 
 class AudioDecoder(nn.ConvTranspose1d):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, bias):
+        # TYPE SHIELD: Ensure ConvTranspose1d receives strict int/bool types
+        super().__init__(
+            in_channels=int(in_channels), 
+            out_channels=int(out_channels), 
+            kernel_size=int(kernel_size), 
+            stride=int(stride), 
+            bias=bool(bias)
+        )
     def forward(self, x):
         x = super().forward(x if x.dim() == 3 else x.unsqueeze(1))
         return x.squeeze(1) if x.shape[1] == 1 else x
