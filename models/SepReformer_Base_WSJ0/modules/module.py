@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 from utils.decorators import *
 from .network import *
 
-# --- New: Periodic Activation for SepACap ---
+# --- Periodic Activation for SepACap Harmonic Modeling ---
 class Snake(nn.Module):
     """
     Snake Activation Function: x + (1/a) * sin^2(ax)
@@ -33,7 +33,7 @@ def get_activation(act_name: str, channels: int):
         return nn.PReLU(channels)
     return nn.ReLU()
 
-# --- Updated Modules ---
+# --- Main Architectural Modules ---
 
 class AudioEncoder(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride, groups, bias, activation="GELU"):
@@ -63,7 +63,7 @@ class Separator(nn.Module):
         super().__init__()
         self.activation_type = activation
         
-        # Internal Class Definitions
+        # Internal Definitions for Enc/Dec Stages
         class RelativePositionalEncoding(nn.Module):
             def __init__(self, in_channels, num_heads, maxlen, embed_v=False):
                 super().__init__()
@@ -105,11 +105,12 @@ class Separator(nn.Module):
                     x = self.downconv(x.transpose(1, 2)).transpose(1, 2)
                 return x, skip
 
-        # Main Structure initialization
+        # ------------------------------------------------------------
+        # Initializing Separator Structure
         self.num_stages = num_stages
         self.pos_emb = RelativePositionalEncoding(**relative_positional_encoding)
         
-        # Clean config dictionaries to avoid "multiple values for keyword argument 'activation'"
+        # Sanitize configs to prevent "multiple values for keyword argument 'activation'"
         enc_clean = {k: v for k, v in enc_stage.items() if k != 'activation'}
         dec_clean = {k: v for k, v in dec_stage.items() if k != 'activation'}
 
@@ -130,7 +131,7 @@ class Separator(nn.Module):
             SepDecStage(**dec_clean, activation=self.activation_type) 
             for _ in range(num_stages)
         ])
-    
+
     def forward(self, input: torch.Tensor):
         x, _ = self.pad_signal(input)
         len_x = x.shape[-1]
@@ -213,7 +214,8 @@ class OutputLayer(nn.Module):
         super().__init__()
         self.masking = masking
         self.num_spks = num_spks
-        self.spe_block = Masking(in_channels, Activation_mask="ReLU")
+        # FIXED: Pass concat_opt=None to satisfy the network.py check
+        self.spe_block = Masking(in_channels, Activation_mask="ReLU", concat_opt=None)
         self.end_conv1x1 = nn.Sequential(
             nn.Linear(out_channels, 4*out_channels),
             nn.GLU(),
