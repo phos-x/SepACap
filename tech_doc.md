@@ -41,6 +41,20 @@ We use `.scp` files to index the data. To avoid the "Manifest Mismatch" errors, 
 2. **Synchronization:** Use a **Force Alignment** script. Never assume the folders match; always use a script to intersect the filenames and create manifests that are perfect "twins."
 3. **The Index-Matching Logic:** Our updated `dataset.py` ignores filename prefixes (like `050_` vs `051_`) and links files purely by their position in the sorted list.
 
+- Verification of Manifests
+
+Ensure your .scp files look like this (strictly ID SPACE PATH):
+
+    alto_song1 /kaggle/working/jaCappella/ballad/song1/alto.wav
+
+    bass_song1 /kaggle/working/jaCappella/ballad/song1/bass.wav
+
+If your song IDs or paths have spaces, the maxsplit=1 ensures the ID is the first word and the rest of the line is treated as one continuous path.
+- Technical Documentation Context: Manifest Robustness
+
+Empty Line Defensive Logic: Manifest parsers must explicitly skip \n characters at the end of files to prevent RuntimeError.
+
+Token Guard: Use maxsplit=1 when parsing .scp files to ensure compatibility with file systems that may contain spaces in song titles or absolute paths.
 ---
 
 ## 3. Architecture Breakdown
