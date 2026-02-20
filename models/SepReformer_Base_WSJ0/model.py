@@ -21,7 +21,7 @@ class Model(nn.Module):
                  module_separator: Dict, 
                  module_output_layer: Dict, 
                  module_audio_dec: Dict,
-                 activation: str = "ReLU"): # Added to fix TypeError
+                 activation: str = "ReLU"):
         super().__init__()
         
         # 1. Parameter Validation
@@ -33,7 +33,6 @@ class Model(nn.Module):
         self.activation_type = activation
 
         # 2. Inject Activation Choice into Separator Config
-        # This ensures the Transformers/Convolutions inside the separator use SNAKE
         if "activation" not in module_separator:
             module_separator["activation"] = self.activation_type
 
@@ -44,10 +43,13 @@ class Model(nn.Module):
         self.out_layer = OutputLayer(**module_output_layer)
         self.audio_decoder = AudioDecoder(**module_audio_dec)
         
-        # 4. Auxiliary Loss Modules (Multi-Resolution Supervision)
-        # ModuleList for bottleneck supervision at each transformer stage
+        # 4. Auxiliary Loss Modules (Bottleneck Supervision)
+        # Sanitization: Remove 'masking' from dict to prevent "multiple values" TypeError
+        aux_out_config = {k: v for k, v in module_output_layer.items() if k != 'masking'}
+
+        # Auxiliary layers always use masking=True for mid-stage supervision
         self.out_layer_bn = nn.ModuleList([
-            OutputLayer(**module_output_layer, masking=True) for _ in range(self.num_stages)
+            OutputLayer(**aux_out_config, masking=True) for _ in range(self.num_stages)
         ])
         self.decoder_bn = nn.ModuleList([
             AudioDecoder(**module_audio_dec) for _ in range(self.num_stages)
@@ -68,12 +70,12 @@ class Model(nn.Module):
         # C. Primary Source Reconstruction
         out_layer_output = self.out_layer(last_stage_output, encoder_output)
         
-        # Ensure audio outputs are synced with input length
+        # Ensure audio outputs are synced with input length (DSA Shield)
         target_len = x.shape[-1]
         each_spk_output = [out_layer_output[idx] for idx in range(self.num_spks)]
         audio = [self.audio_decoder(out)[..., :target_len] for out in each_spk_output]
         
-        # D. Auxiliary Supervision
+        # D. Auxiliary Supervision (Multi-Resolution Spectral Loss support)
         audio_aux = []
         for idx, stage_out in enumerate(each_stage_outputs):
             # Upsample stage features to match encoder resolution for masking
