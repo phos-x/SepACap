@@ -1,18 +1,13 @@
 project: "[Project] SepReformer"
-notes: >
-  SepACap adaptation for jaCappella:
-  1. Updated to 6 output stems (alto, bass, lead, soprano, tenor, perc).
-  2. Integrated SNAKE periodic activations for harmonic modeling[cite: 41, 52].
-  3. Switched to Composite Loss (Waveform, Mel, Spectral) for silence-awareness[cite: 42, 60].
-  4. Enabled Power Set Dynamic Mixing for variable singer counts[cite: 43, 65].
+notes: "SepACap adaptation for jaCappella: 6 stems, SNAKE activations, and Composite Loss."
 
 # ------------------------------------------------------------------------------------------------------------------------------ #
 config:
-    # ------------------------------------------------------ #
+    # ------------------------------------------------------------ #
     dataset:
-        [cite_start]max_len: 32000             # 4-second snippets at 8kHz [cite: 75]
+        max_len: 32000             
         sampling_rate: 8000
-        scp_dir: "/kaggle/working/SepACap/data/scp_ss_jacappella"
+        scp_dir: "/kaggle/working/SepACap/data/scp_ss_8k_jacappella"
         train:
             mixture: "tr_mixture.scp"
             spk1: "tr_alto.scp"
@@ -21,7 +16,7 @@ config:
             spk4: "tr_soprano.scp"
             spk5: "tr_tenor.scp"
             spk6: "tr_vocal_percussion.scp"
-            [cite_start]dynamic_mixing: true   # Enables Power Set Augmentation [cite: 43, 65]
+            dynamic_mixing: true   
         valid:
             mixture: "cv_mixture.scp"
             spk1: "cv_alto.scp"
@@ -47,8 +42,8 @@ config:
     # ------------------------------------------------------------ #
     model:
         num_stages: &var_model_num_stages 4
-        [cite_start]num_spks: &var_model_num_spks 6    # Expanded to 6 stems 
-        [cite_start]activation: "SNAKE"               # SnaKE activation for periodic singing [cite: 41, 52]
+        num_spks: &var_model_num_spks 6    
+        activation: "SNAKE"               
         module_audio_enc:
             in_channels: 1
             out_channels: &var_model_audio_enc_out_channels 256
@@ -112,13 +107,12 @@ config:
             bias: false
     # ------------------------------------------------------------ #
     criterion:
-        # Replaced SI-SDR with Composite Objective for silence handling [cite: 42, 53]
         name: ["SepACapCompositeLoss"] 
         SepACapCompositeLoss:
             weights:
-                [cite_start]waveform: 1.0             # L1 time-domain loss 
-                [cite_start]mel: 0.7                  # Multi-scale Mel loss 
-                [cite_start]spectral: 0.3             # Multi-resolution spectral loss 
+                waveform: 1.0             
+                mel: 0.7                  
+                spectral: 0.3             
             window_sizes: [512, 1024, 2048]
             num_spks: *var_model_num_spks
     # ------------------------------------------------------------ #
