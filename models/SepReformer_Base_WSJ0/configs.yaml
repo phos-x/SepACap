@@ -5,7 +5,7 @@ notes: "SepACap adaptation for jaCappella: 6 stems, SNAKE activations, and Compo
 config:
     # ------------------------------------------------------------ #
     dataset:
-        max_len: 24000             # FIX 2: Reduced from 32000 to 24000 (3 seconds at 8kHz) to save memory
+        max_len: 24000             #Reduced from 32000 to 24000 (3 seconds at 8kHz) to save memory
         sampling_rate: 8000
         scp_dir: "/kaggle/working/SepACap/data/scp_ss_jacappella"
         train:
@@ -35,7 +35,7 @@ config:
             spk6: "tt_vocal_percussion.scp"
     # ------------------------------------------------------------ #
     dataloader:
-        batch_size: 1              # FIX 1: Reduced from 2 to 1 to prevent Kaggle GPU OOM
+        batch_size: 1              # Reduced from 2 to 1 to prevent Kaggle GPU OOM
         pin_memory: false
         num_workers: 12
         drop_last: false
@@ -109,7 +109,6 @@ config:
             bias: false
     # ------------------------------------------------------------ #
     criterion:
-        # Padded names to align with Engine's unpacking (mag, time, sisnri, sdri)
         name: ["SepACapCompositeLoss", "SepACapCompositeLoss", "PIT_SISNRi", "PIT_SDRi"] 
         SepACapCompositeLoss:
             weights:
