@@ -61,12 +61,9 @@ class FeatureProjector(nn.Module):
 class Separator(nn.Module):
     def __init__(self, num_stages, relative_positional_encoding, enc_stage, spk_split_stage, simple_fusion, dec_stage, activation="SNAKE"):
         super().__init__()
+        self.activation_type = activation
         
-        # Inject activation into stage configs
-        enc_stage["activation"] = activation
-        dec_stage["activation"] = activation
-        
-        # Define internal classes for local use
+        # Internal Class Definitions
         class RelativePositionalEncoding(nn.Module):
             def __init__(self, in_channels, num_heads, maxlen, embed_v=False):
                 super().__init__()
@@ -87,7 +84,7 @@ class Separator(nn.Module):
                 self.act = get_activation(activation, in_channels)
             
             def forward(self, x: torch.Tensor):
-                return self.act(self.BN(self.down_conv(x.transpose(1, 2)))).transpose(1, 2)
+                return self.act(self.BN(self.down_conv(x)))
 
         class SepEncStage(nn.Module):
             def __init__(self, global_blocks, local_blocks, down_conv_layer, down_conv=True, activation="SNAKE"):
@@ -105,26 +102,39 @@ class Separator(nn.Module):
                 x = self.l_block_2(x.transpose(1, 2)).transpose(1, 2)
                 skip = x
                 if self.downconv:
-                    x = self.downconv(x)
+                    x = self.downconv(x.transpose(1, 2)).transpose(1, 2)
                 return x, skip
 
-        # Main Separator Structure
+        # Main Structure initialization
         self.num_stages = num_stages
         self.pos_emb = RelativePositionalEncoding(**relative_positional_encoding)
-        self.enc_stages = nn.ModuleList([SepEncStage(**enc_stage, down_conv=True, activation=activation) for _ in range(num_stages)])
-        self.bottleneck_G = SepEncStage(**enc_stage, down_conv=False, activation=activation)
         
-        # SpkSplit uses GLU (Fixed internal structure)
+        # Clean config dictionaries to avoid "multiple values for keyword argument 'activation'"
+        enc_clean = {k: v for k, v in enc_stage.items() if k != 'activation'}
+        dec_clean = {k: v for k, v in dec_stage.items() if k != 'activation'}
+
+        self.enc_stages = nn.ModuleList([
+            SepEncStage(**enc_clean, down_conv=True, activation=self.activation_type) 
+            for _ in range(num_stages)
+        ])
+        
+        self.bottleneck_G = SepEncStage(**enc_clean, down_conv=False, activation=self.activation_type)
         self.spk_split_block = SpkSplitStage(**spk_split_stage)
         
-        self.simple_fusion = nn.ModuleList([nn.Conv1d(simple_fusion['out_channels']*2, simple_fusion['out_channels'], 1) for _ in range(num_stages)])
-        self.dec_stages = nn.ModuleList([SepDecStage(**dec_stage) for _ in range(num_stages)])
+        self.simple_fusion = nn.ModuleList([
+            nn.Conv1d(simple_fusion['out_channels']*2, simple_fusion['out_channels'], 1) 
+            for _ in range(num_stages)
+        ])
+        
+        self.dec_stages = nn.ModuleList([
+            SepDecStage(**dec_clean, activation=self.activation_type) 
+            for _ in range(num_stages)
+        ])
     
     def forward(self, input: torch.Tensor):
         x, _ = self.pad_signal(input)
         len_x = x.shape[-1]
         
-        # Generate Positional Encoding
         pos_seq = torch.arange(0, len_x // 2**self.num_stages).long().to(x.device)
         pos_seq = pos_seq[:, None] - pos_seq[None, :]
         pos_k, _ = self.pos_emb(pos_seq)
@@ -133,8 +143,9 @@ class Separator(nn.Module):
         for idx in range(self.num_stages):
             x, skip_ = self.enc_stages[idx](x.transpose(1, 2), pos_k)
             skip.append(self.spk_split_block(skip_.transpose(1, 2)))
+            x = x.transpose(1, 2)
         
-        x, _ = self.bottleneck_G(x, pos_k)
+        x, _ = self.bottleneck_G(x.transpose(1, 2), pos_k)
         x = self.spk_split_block(x.transpose(1, 2))
         
         each_stage_outputs = []
@@ -177,7 +188,6 @@ class SpkSplitStage(nn.Module):
 class SepDecStage(nn.Module):
     def __init__(self, num_spks, global_blocks, local_blocks, spk_attention, activation="SNAKE"):
         super().__init__()
-        # Decoders use 3 blocks of Global/Local/SpkAttention
         self.g_block_1 = GlobalBlock(**global_blocks)
         self.l_block_1 = LocalBlock(**local_blocks)
         self.spk_attn_1 = SpkAttention(**spk_attention)
@@ -190,7 +200,6 @@ class SepDecStage(nn.Module):
         self.num_spk = num_spks
     
     def forward(self, x, pos_k):
-        # Repeat block processing logic
         for gb, lb, sa in [(self.g_block_1, self.l_block_1, self.spk_attn_1), 
                            (self.g_block_2, self.l_block_2, self.spk_attn_2), 
                            (self.g_block_3, self.l_block_3, self.spk_attn_3)]:
@@ -214,7 +223,6 @@ class OutputLayer(nn.Module):
         x = self.end_conv1x1(x[..., :input.shape[-1]].transpose(1, 2)).transpose(1, 2)
         B = x.shape[0] // self.num_spks
         if self.masking:
-            # Masking uses the original input to guide separation
             inp_v = input.expand(self.num_spks, B, -1, -1).transpose(0, 1).reshape(B*self.num_spks, -1, x.shape[-1])
             x = self.spe_block(x, inp_v)
         return x.view(B, self.num_spks, -1, x.shape[-1]).transpose(0, 1)
