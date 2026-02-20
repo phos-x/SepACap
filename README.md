@@ -1,5 +1,3 @@
-Here is a completely rewritten, neat, and highly readable README tailored specifically for your **SepACap** project. It highlights your unique GitOps workflow, the 6-stem acapella separation goal, and pays homage to the original SepReformer architecture.
-
 ---
 
 # 🎙️ SepACap: 6-Stem Acapella Source Separation
