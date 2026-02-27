@@ -1,0 +1,14 @@
+# Infrastructure Configuration for Production
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 4
+
+paths:
+  model_weights: "/opt/ml/model/sepacap_model.onnx"  # SageMaker's default model injection path
+  temp_audio_dir: "/tmp/sepacap_processing/"
+
+model:
+  sample_rate: 8000
+  onnx_opset: 14
+  stems: ["Alto", "Bass", "Lead_Vocal", "Soprano", "Tenor", "Vocal_Percussion"]

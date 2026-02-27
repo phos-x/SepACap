@@ -1,6 +1,6 @@
 # 🎙️ SepACap: 6-Stem Acapella Source Separation
 
-*An advanced adaptation of the NeurIPS 2024 **SepReformer** architecture, engineered specifically for multi-singer acapella extraction.*
+*An advanced adaptation of the NeurIPS 2024 **SepReformer** architecture, engineered specifically for multi-singer acapella extraction and deployed via an Enterprise AWS MLOps pipeline.*
 
 SepACap takes a single monaural audio mixture and successfully isolates it into **6 distinct singing stems** (Alto, Bass, Lead Vocal, Soprano, Tenor, and Vocal Percussion) utilizing the jaCappella dataset.
 
@@ -8,83 +8,97 @@ Unlike standard speech separation models that isolate 2 speakers, SepACap incorp
 
 ---
 
-## ☁️ The GitOps Workflow (Kaggle + VSCode)
+## ☁️ The Enterprise MLOps Workflow
 
-This project is optimized for cloud execution rather than local hardware. It utilizes a modern **GitOps approach**, bridging local development in VSCode with heavy-duty training on **Kaggle Notebook GPUs**.
+This project has evolved from a local research script into a fully automated, cloud-native CI/CD ecosystem. It utilizes **GitHub Actions** to orchestrate heavy-duty distributed training on **AWS SageMaker**, automated hyperparameter tuning via **Optuna**, and highly optimized C++ production inference using **ONNX Runtime**.
 
-**How it works:**
+**The Pipeline:**
 
-1. Code is edited and managed locally via **VSCode**.
-2. Updates are pushed to a Git repository.
-3. The **Kaggle Notebook** acts as the execution engine, pulling the latest repository changes directly into the GPU's storage environment.
-4. *Note: All primary execution steps, environment setups, and Git pulling commands are documented and run directly inside the provided Kaggle Notebook.*
-5. *You can check out steps to connect external editors like Colab or VSCode to the same Jupyter Server that powers your Kaggle notebook on kaggle official docs.*
+1. **Research (`dev` branch):** Code pushes trigger GitHub Actions to securely spin up AWS SageMaker GPU instances, run the PyTorch training loop, and log metrics/audio directly to **Weights & Biases (W&B)**.
+2. **Promotion (PR to `prod`):** Merging a model triggers an automated CPU runner to compile the heavy `.pth` PyTorch weights into a lightning-fast static C++ `.onnx` graph.
+3. **Production (`prod` branch):** The `.onnx` model is packaged into a custom **FastAPI Docker Container**, scanned for vulnerabilities, and pushed to Amazon ECR to serve live API traffic with zero disk I/O bottlenecks.
 
 ---
 
 ## 📂 Repository Structure
 
-* **`📁 /data` (The Fuel):** Handles dataset preparation. Contains scripts to mix isolated singing stems into training mixtures and generates the lightweight `.scp` (Script) files that point the dataloader to the audio without crashing the RAM.
-* **`📁 /models` (The Brains):** The core neural network. Contains the specific model versions (e.g., `SepReformer_Base_WSJ0` which we adapted for SepACap), the PyTorch network `modules/`, the `configs.yaml` master control panel, and the `log/scratch_weights/` where the model saves its learned checkpoints.
-* **`📁 /sample_wav` (The Testing Ground):** The input/output tray for human evaluation. Drop a mixed song in here, and the network will spit out the 6 isolated `.wav` stems for you to listen to.
-* **`📁 /utils` (The Toolbox):** Contains the infrastructure scripts. Includes the `util_engine.py` (the training loop foreman), `util_implement.py` (the dynamic PyTorch object factory), and `criterions.py` (the custom Loss Functions).
+To separate heavy research dependencies from lightweight production code, the repository is split into two distinct environments:
+
+* **`📁 .github/workflows/` (The Automation):** Contains the CI/CD pipelines for automated SageMaker training, ONNX conversion, ECR Docker builds, and DevSecOps scanning.
+* **`📁 training/` (The Lab):** * `trigger_job.py`: The master switch to launch AWS SageMaker jobs remotely.
+* `run.py` & `tune.py`: The decoupled PyTorch execution scripts (Standard vs. Optuna Sweeps).
+* `models/`: The core neural network architectures and `configs.yaml` control panel.
+* `utils/`: The infrastructure toolkit (`util_engine.py`, dynamic factories, and custom criterions).
+
+
+* **`📁 inference/` (The Factory):** * `Dockerfile`: The lightweight production image (No PyTorch required).
+* `app/serve.py`: The custom FastAPI web server designed for in-memory audio zipping.
+* `weights/`: Where the compiled `.onnx` models live.
+
+
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Execution & Automation Commands
 
-### 1. Git LFS Requirement
+This repository uses a "Master Switch" approach. You do not run the training loop directly; you use `trigger_job.py` to command AWS SageMaker to spin up the required GPU infrastructure.
 
-This repository uses **Git LFS (Large File Storage)** to manage the massive pretrained model weight files (`.pth`). If Git LFS is not installed in your Kaggle environment before cloning, the weights will not download properly.
+### 1. Standard Training (AWS SageMaker)
+
+Launch a full 200-epoch training run on an AWS `ml.g4dn.xlarge` instance. The script fires asynchronously (fire-and-forget) to save CI/CD costs.
 
 ```bash
-# Inside your Kaggle Notebook terminal/cell
-sudo apt update
-sudo apt install git-lfs
-git lfs install
+python training/trigger_job.py \
+    --job-name sepacap-standard-run \
+    --config training/models/SepReformer_Base_WSJ0/configs.yaml \
+    --mode train
 
 ```
 
-### 2. Execution Commands
+### 2. Automated Hyperparameter Tuning (Optuna)
 
-While the full pipeline is handled inside the Kaggle Notebook, here are the core commands used to trigger the engine via `run.py`:
-
-**To Train the Network:**
-
-> *Make sure your `.scp` file paths are correctly set in `models/SepACap_Base/configs.yaml` before running.*
+Launch a 30-trial Optuna sweep. SageMaker will dynamically invent learning rates and batch sizes, utilizing a `MedianPruner` to instantly kill underperforming runs and save GPU costs.
 
 ```bash
-python run.py --model SepACap_Base --engine-mode train
+python training/trigger_job.py \
+    --job-name sepacap-optuna-sweep \
+    --config training/models/SepReformer_Base_WSJ0/configs.yaml \
+    --mode tune
 
 ```
 
-**To Run Inference on a Single Song:**
+### 3. ONNX Model Promotion
 
-> *This will separate the audio and save the 6 output `.wav` files to your directory.*
-
-```bash
-python run.py --model SepACap_Base--engine-mode infer_sample --sample-file "filename"
-
-```
-
-**To Evaluate on the Test Dataset:**
-
-> *Runs validation metrics without saving the heavy audio files.*
+Convert a trained `.pth` PyTorch research model into a production-ready C++ `.onnx` graph. (This runs automatically during Pull Requests to `prod`).
 
 ```bash
-python run.py --model SepACap_Base --engine-mode test
+python training/promote_to_prod.py \
+    --config training/models/SepReformer_Base_WSJ0/configs.yaml \
+    --weights training/weights/epoch.best.pth \
+    --output inference/weights/sepacap_model.onnx
 
 ```
 
 ---
 
-## 🧠 Technical Highlights
+## 🛡️ DevSecOps & Security
 
-SepACap heavily modifies the base SepReformer with the following upgrades:
+This repository enforces strict security standards to protect cloud infrastructure and model integrity:
+
+* **Bandit (SAST):** Automatically scans Python code for ML-specific vulnerabilities (e.g., enforcing `weights_only=True` to prevent arbitrary code execution from poisoned `.pth` pickles).
+* **GitLeaks:** Blocks commits containing hardcoded AWS Credentials or Weights & Biases API keys.
+* **Trivy Container Scanning:** Scans the FastAPI production Docker image for OS-level CVEs before pushing to Amazon ECR.
+
+---
+
+## 🧠 Technical Highlights & Upgrades
+
+SepACap heavily modifies the base SepReformer with the following deep learning and architectural upgrades:
 
 * **SNAKE Activations:** Replaced standard ReLU/GELU in the separator blocks with periodic Snake activations to better extrapolate musical pitch and harmonics.
-* **Composite Loss:** A highly tuned loss function blending Waveform L1 (1.0), Psychoacoustic Mel-scale (0.7), and Multi-Res Spectral L1 (0.3).
-* **Two-Stage Detached PIT:** Optimizes the  (720) permutation calculations by detaching the gradient graph during the pairing phase, dropping VRAM usage from ~14GB to ~50MB during loss calculation.
+* **Two-Stage Detached PIT:** Optimizes the 6! (720) permutation calculations by detaching the gradient graph during the pairing phase, dropping VRAM usage drastically during loss calculation.
+* **In-Memory RAM Processing:** The production FastAPI server utilizes `io.BytesIO` to load user `.wav` files, run ONNX inference, and compress the 6 output stems into a `.zip` archive entirely in RAM, preventing IOPS crashes under high web traffic.
+* **Cloud Experiment Tracking:** Native integration with **Weights & Biases**, allowing for real-time loss tracking and in-browser audio playback (`wandb.Audio`) of the separated stems at different training epochs.
 
 ---
 
