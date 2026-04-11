@@ -10,16 +10,9 @@ from utils.implements.criterions import PIT_SISNRi, PIT_SDRi
 from utils import util_system, util_implement
 from utils.decorators import logger_wraps
 
-# ---------------------------------------------------------------------------
-# 1. SYSTEM LOGGING SETUP
-# ---------------------------------------------------------------------------
-# Configure Loguru to write persistent logs for debugging AWS/Docker crashes
 log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log/system_log.log")
 logger.add(log_file_path, level="DEBUG", mode="w")
 
-# ---------------------------------------------------------------------------
-# 2. COMPONENT BUILDER (The Modular Core)
-# ---------------------------------------------------------------------------
 def build_components(config: Dict[str, Any], args: Any) -> Tuple:
     """
     Constructs and returns all PyTorch entities required for training/tuning.
@@ -28,11 +21,9 @@ def build_components(config: Dict[str, Any], args: Any) -> Tuple:
     """
     logger.info("Constructing PyTorch components...")
 
-    # A. Hardware Routing
     gpuid_str = str(config["engine"].get("gpuid", "0"))
     gpuid = tuple(map(int, gpuid_str.split(',')))
     
-    # Graceful fallback to CPU if CUDA is unavailable (crucial for CI/CD testing)
     if torch.cuda.is_available():
         device = torch.device(f'cuda:{gpuid[0]}')
     else:
@@ -79,8 +70,7 @@ def main(args):
     # Prioritize the dynamic AWS --config argument, fallback to local configs.yaml
     yaml_path = getattr(args, 'config', None)
     if not yaml_path or not os.path.exists(yaml_path):
-        yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs.yaml")
-        
+        yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "config", "config.yaml")
     logger.info(f"Loading configuration from: {yaml_path}")
     yaml_dict = util_system.parse_yaml(yaml_path)
     config = yaml_dict["config"]
