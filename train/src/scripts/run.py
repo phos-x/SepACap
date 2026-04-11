@@ -58,9 +58,8 @@ def main():
 
     try:
         safe_model_name = sanitize_model_name(args.model)
-        module_path = f"train.src.models.{safe_model_name}.main"
+        module_path = f".train.src.models.{safe_model_name}.main"
         
-        print(os.getcwd())
         logger.info(f"Dynamically importing target module: {module_path}")
         main_module = importlib.import_module(module_path)
         
