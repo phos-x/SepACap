@@ -23,7 +23,7 @@ def main():
     parser.add_argument(
         "--model",
         type=str,
-        default="SepReformer_Base_WSJ0", 
+        default="SepACap_Base", 
         help="Name of the model directory inside the 'models' folder"
     )
     parser.add_argument(
@@ -58,7 +58,7 @@ def main():
 
     try:
         safe_model_name = sanitize_model_name(args.model)
-        module_path = f"models.{safe_model_name}.main"
+        module_path = f"train.src.models.{safe_model_name}.main"
         
         logger.info(f"Dynamically importing target module: {module_path}")
         main_module = importlib.import_module(module_path)

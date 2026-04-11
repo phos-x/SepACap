@@ -7,7 +7,7 @@ import torch
 import yaml
 import onnx
 
-from models.SepReformer_Base_WSJ0.model import Model
+from models.SepACap_base.model import Model
 
 logging.basicConfig(
     level=logging.INFO,
