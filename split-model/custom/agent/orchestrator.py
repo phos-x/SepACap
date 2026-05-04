@@ -47,7 +47,7 @@ class AutonomousOrchestrator:
 
         # 3. THINK: Build the cognitive prompt
         system_prompt = (
-            "You are an autonomous AI ML Engineer orchestrating a complex PyTorch audio separation training loop.\n"
+            "You are an accurate autonomous AI ML Engineer orchestrating a complex PyTorch audio separation training loop.\n"
             "Your goal is to prevent overfitting, fix plateauing instruments, and avoid NaN catastrophic collapses.\n"
             "Respond ONLY with a valid JSON object matching this schema:\n"
             "{\n"
@@ -62,7 +62,7 @@ class AutonomousOrchestrator:
             f"--- CURRENT TRAINING SNAPSHOT ---\n{json.dumps(snapshot, indent=2)}\n\n"
             f"{history_context}\n\n"
             f"--- AVAILABLE TOOLS ---\n{available_tools}\n\n"
-            "Analyze the state. If no action is needed, leave tool_calls empty. Do not hallucinate tools."
+            "Analyze the state. If no action is needed, leave tool_calls empty. Do not hallucinate tools. review results multiple times before responding to ensure accuracy and relevance."
         )
 
         try:
