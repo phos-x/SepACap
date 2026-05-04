@@ -35,21 +35,35 @@ class SSLCrossAttention(nn.Module):
         )
         
         # ZERO-INIT: Acts as an Identity function at step 0 to protect pre-trained weights.
+        # This MUST be normal_ with a tiny std, not zeros_, to prevent Adam division-by-zero crashes.
         nn.init.normal_(self.mha.out_proj.weight, mean=0.0, std=1e-6)
         if self.mha.out_proj.bias is not None:
             nn.init.zeros_(self.mha.out_proj.bias)
 
     def forward(self, x_roformer: Tensor, context_embeddings: Tensor) -> Tensor:
-        k = self.k_proj(context_embeddings)
-        v = self.v_proj(context_embeddings)
+        # Determine the correct device for the autocast shield
+        device_type = x_roformer.device.type if x_roformer.device.type in ['cuda', 'cpu'] else 'cuda'
         
-        attn_out, _ = self.mha(query=x_roformer, key=k, value=v)
+        # SHIELD ACTIVATED: Force this specific mathematical operation into FP32
+        with torch.autocast(device_type=device_type, enabled=False):
+            # Safely cast inputs up to 32-bit floats
+            q_fp32 = x_roformer.float()
+            context_fp32 = context_embeddings.float()
+            
+            # Project Context into Key/Value space
+            k_fp32 = self.k_proj(context_fp32)
+            v_fp32 = self.v_proj(context_fp32)
+            
+            # The heavy dot-product happens safely in 32-bit space.
+            # Max capacity jumps from 65,504 (FP16) to 3.4e38 (FP32), preventing NaN overflows.
+            attn_out, _ = self.mha(query=q_fp32, key=k_fp32, value=v_fp32)
+            
         return attn_out
 
 
 class SATBSeparatorWrapper(nn.Module):
     """
-    A fully portable, config-driven 'Trojan Horse' Wrapper.
+    A fully portable, config-driven 'Troakes Horse' Wrapper.
     """
 
     def __init__(self, cfg: Dict[str, Any]) -> None:
@@ -116,13 +130,17 @@ class SATBSeparatorWrapper(nn.Module):
         context_embeddings = None
         
         if self.context_encoder is not None:
-            is_trainable = self.context_encoder._cfg.trainable
-            context_manager = torch.no_grad() if not is_trainable else torch.enable_grad()
+            # Safely check if the encoder was set to trainable
+            is_trainable = False
+            if hasattr(self.context_encoder, '_cfg'):
+                is_trainable = getattr(self.context_encoder._cfg, 'trainable', False)
+                
+            context_manager = torch.enable_grad() if is_trainable else torch.no_grad()
             
             with context_manager:
                 context_embeddings = self.context_encoder(mix)  # (B, T_ssl, D_ssl)
         
-        # Pass to separator. 
+        # Pass to separator
         out = self.separator(
             mix, 
             context_embeddings=context_embeddings, 
