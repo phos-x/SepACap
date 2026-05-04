@@ -4,7 +4,6 @@ __version__ = '1.0.5'
 
 import argparse
 import sys
-
 import numpy as np
 from tqdm.auto import tqdm
 import torch
@@ -27,7 +26,7 @@ import warnings
 
 # Try to import the custom agent factory gracefully
 try:
-    from custom.agent.agent_factory import build_agent
+    from custom.agent.factory import build_agent
 except ImportError:
     print(f"Custom agent factory not found. Proceeding without LLM agent. Error: {sys.exc_info()[0]}")
     build_agent = None
@@ -414,92 +413,77 @@ def train_model(args: Union[argparse.Namespace, None], rank=None, world_size=Non
             if rank == 0:
                 all_time_all_metrics[f"epoch_{epoch}"] = all_metrics
                 best_metric, metric_avg = compute_epoch_metrics(
-                    model=model,
-                    args=args,
-                    config=config,
-                    device=device,
-                    device_ids=device_ids,
-                    best_metric=best_metric,
-                    epoch=epoch,
-                    scheduler=scheduler,
-                    optimizer=optimizer,
-                    all_time_all_metrics=all_time_all_metrics,
-                    all_losses=all_losses,
-                    world_size=world_size,
-                    metrics_avg=metrics_avg,
-                    all_metrics=all_metrics
+                    model=model, args=args, config=config, device=device,
+                    device_ids=device_ids, best_metric=best_metric, epoch=epoch,
+                    scheduler=scheduler, optimizer=optimizer,
+                    all_time_all_metrics=all_time_all_metrics, all_losses=all_losses,
+                    world_size=world_size, metrics_avg=metrics_avg, all_metrics=all_metrics
                 )
         else:
             best_metric, metric_avg = compute_epoch_metrics(
-                model=model,
-                args=args,
-                config=config,
-                device=device,
-                device_ids=device_ids,
-                best_metric=best_metric,
-                epoch=epoch,
-                scheduler=scheduler,
-                optimizer=optimizer,
-                all_time_all_metrics=all_time_all_metrics,
-                all_losses=all_losses,
+                model=model, args=args, config=config, device=device,
+                device_ids=device_ids, best_metric=best_metric, epoch=epoch,
+                scheduler=scheduler, optimizer=optimizer,
+                all_time_all_metrics=all_time_all_metrics, all_losses=all_losses,
             )
 
-        # --- CUSTOM LLM AGENT HOOK ---
-        # The agent acts as a Meta-Controller: analyzing logs and suggesting actions.
-        interval = agent._cfg.interval if hasattr(agent, '_cfg') else 3 
+        # --- LEVEL 4.5 AUTONOMOUS ORCHESTRATOR HOOK ---
+        # Get the interval from the config, safely defaulting to 3
+        agent_interval = config.get('agent', {}).get('params', {}).get('interval', 3) if isinstance(config.get('agent'), dict) else 3
         
-        if agent is not None and (epoch % interval == 0):
+        if agent is not None and (epoch % agent_interval == 0):
             import math
+            import numpy as np
             is_nan = math.isnan(train_loss) or math.isnan(metric_avg)
+            
+            # FOOLPROOF METRIC EXTRACTION
+            # We grab the metrics for this exact epoch from the global dictionary
+            # This completely bypasses the UnboundLocalError
+            epoch_metrics = all_time_all_metrics.get(f"epoch_{epoch}", {})
+            sdr_dict = {}
+            if 'sdr' in epoch_metrics:
+                sdr_dict = {stem: float(np.mean(vals)) for stem, vals in epoch_metrics['sdr'].items()}
             
             snapshot = {
                 "epoch": epoch,
                 "train_loss": float(train_loss) if not is_nan else "NaN",
                 "val_metric_avg": float(metric_avg) if not is_nan else "NaN",
-                "stem_metrics": {stem: np.mean(vals) for stem, vals in all_metrics['sdr'].items()} if all_metrics else {},
+                "stem_metrics": sdr_dict,
                 "current_lr": optimizer.param_groups[0]['lr'],
                 "SYSTEM_HEALTH": "CRITICAL NaN" if is_nan else "Nominal",
             }
             
-            # NATIVE INJECTION: Pass the PyTorch objects directly to the AI's hands
+            # Context injection for the tools
             live_context = {
                 "optimizer": optimizer,
                 "multi_loss": multi_loss,
                 "model": model
             }
             
+            # The LLM only needs to think on the master process
             if should_print:
                 print("\n🧠 Invoking Autonomous Orchestrator...")
                 
-            agent_response = agent.analyze(snapshot, live_context)
-            
-            if should_print:
-                print(f"🤖 REASONING: {agent_response.get('reasoning')}")
-                print(f"🤖 ACTIONS: {agent_response.get('actions_taken')}\n")
+                # The Orchestrator analyzes the snapshot and physically executes the tools inside this call
+                agent_response = agent.analyze(snapshot, live_context)
                 
-                # Log to W&B
+                print(f"🤖 REASONING: {agent_response.get('reasoning')}")
+                print(f"🤖 ACTIONS TAKEN: {agent_response.get('actions_taken')}\n")
+                
                 if wandb.run is not None:
                     wandb.log({
                         "agent/reasoning": wandb.Html(f"<p>{agent_response.get('reasoning')}</p>"), 
                         "agent/actions_taken": str(agent_response.get('actions_taken'))
                     })
 
-            # Sync actions across all GPUs to prevent DDP desync
+            # DDP SYNC: If the AI modified the learning rate on Rank 0, 
+            # we must broadcast the new LR to all other GPUs to prevent a crash.
             if ddp:
-                dist.broadcast_object_list(actions_list, src=0)
-
-            # Apply identical actions on all ranks
-            for action in actions_list[0]:
-                if action == "reduce_lr":
-                    if should_print: print("🤖 LLM Agent Action: Reducing LR by 0.5x")
+                lr_list = [optimizer.param_groups[0]['lr']] if should_print else [0.0]
+                dist.broadcast_object_list(lr_list, src=0)
+                if not should_print:
                     for param_group in optimizer.param_groups:
-                        param_group['lr'] *= 0.5
-                elif action == "increase_lr":
-                    if should_print: print("🤖 LLM Agent Action: Increasing LR by 1.5x")
-                    for param_group in optimizer.param_groups:
-                        param_group['lr'] *= 1.5
-                elif action == "continue":
-                    pass
+                        param_group['lr'] = lr_list[0]
         # -----------------------------
 
 
