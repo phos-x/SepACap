@@ -83,27 +83,33 @@ class SSLChoralEncoder(nn.Module):
         if waveform.dim() != 3:
             raise ValueError(f"SSLChoralEncoder expected waveform (B, C, T), got {waveform.shape}")
 
-        # 1. Safe Mono Conversion
-        # If stereo, average the channels. If already mono, squeeze the channel dim.
-        if waveform.size(1) > 1:
-            mono_waveform = waveform.mean(dim=1)  # (B, T)
-        else:
-            mono_waveform = waveform.squeeze(1)   # (B, T)
-
-        # 2. Device-Aware Resampling
-        if self.resample is not None:
-            # Safely move the resampler to the waveform's device. 
-            # PyTorch ignores this if it's already on the correct device.
-            self.resample = self.resample.to(mono_waveform.device)
-            mono_waveform = self.resample(mono_waveform)
-
-        # 3. Extract Embeddings
-        # If the model is not trainable, we enforce no_grad to save VRAM and compute,
-        # acting as a safeguard even if the calling script forgets to wrap it.
-        context_manager = torch.no_grad() if not self._cfg.trainable else torch.enable_grad()
+        # ENGINEERING FIX: Force the entire SSL block to run in Float32.
+        # This prevents NaN overflows from torchaudio.Resample and Wav2Vec2 LayerNorms
+        # when the outer training loop uses mixed precision (AMP/FP16).
+        device_type = waveform.device.type if waveform.device.type in ['cuda', 'cpu'] else 'cuda'
         
-        with context_manager:
-            outputs = self._ssl(mono_waveform)
-            embeddings: Tensor = outputs.last_hidden_state  # (B, T_ssl, D)
+        with torch.autocast(device_type=device_type, enabled=False):
+            # Cast waveform to explicit fp32 just to be absolutely safe
+            waveform = waveform.float()
 
+            # 1. Safe Mono Conversion
+            if waveform.size(1) > 1:
+                mono_waveform = waveform.mean(dim=1)  # (B, T)
+            else:
+                mono_waveform = waveform.squeeze(1)   # (B, T)
+
+            # 2. Device-Aware Resampling
+            if self.resample is not None:
+                self.resample = self.resample.to(mono_waveform.device)
+                mono_waveform = self.resample(mono_waveform)
+
+            # 3. Extract Embeddings
+            context_manager = torch.no_grad() if not self._cfg.trainable else torch.enable_grad()
+            
+            with context_manager:
+                outputs = self._ssl(mono_waveform)
+                embeddings: Tensor = outputs.last_hidden_state  # (B, T_ssl, D)
+
+        # The embeddings are returned. If the surrounding code is in AMP, 
+        # PyTorch will safely downcast them back to fp16 at the Cross-Attention layer.
         return embeddings
