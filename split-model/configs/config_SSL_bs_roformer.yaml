@@ -1,0 +1,171 @@
+# --- NEW: CROSS ATTENTION SETTINGS ---
+# These control the fusion of the SSL embeddings into the BS-RoFormer
+cross_attn_heads: 8
+cross_attn_dropout: 0.1
+
+# --- NEW: SSL ENCODER CONFIGURATION ---
+ssl_encoder:
+  enabled: true
+  context_dim: 768  # Fallback for dynamic dimension inference
+  name: SSLChoralEncoder
+  params:
+    model_name: "facebook/wav2vec2-base-960h"
+    trainable: false
+    input_sr: 44100
+    target_sr: 16000
+
+# --- NEW: LLM META-CONTROLLER CONFIGURATION ---
+agent:
+  enabled: true
+  name: LLMAgent
+  params:
+    provider_type: "openai_compat"
+    base_url: "https://api.groq.com/openai/v1"
+    model_name: "llama-3.3-70b-versatile"  # Extremely fast, highly accurate at JSON
+    api_key_env_var: "GROQ_API_KEY"     # Points to the env var we just set
+    interval: 3                         # Agent runs every 3 epochs
+    temperature: 0.1                    # Low temp = deterministic, reliable JSON
+    action_whitelist:
+      - reduce_lr
+      - increase_lr
+      - continue
+
+audio:
+  chunk_size: 131584
+  dim_f: 1024
+  dim_t: 256
+  hop_length: 512
+  n_fft: 2048
+  num_channels: 2
+  sample_rate: 44100
+  min_mean_abs: 0.001
+
+model:
+  dim: 192
+  depth: 6
+  stereo: true
+  num_stems: 1
+  time_transformer_depth: 1
+  freq_transformer_depth: 1
+  linear_transformer_depth: 0
+  freqs_per_bands: !!python/tuple
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 4
+    - 12
+    - 12
+    - 12
+    - 12
+    - 12
+    - 12
+    - 12
+    - 12
+    - 24
+    - 24
+    - 24
+    - 24
+    - 24
+    - 24
+    - 24
+    - 24
+    - 48
+    - 48
+    - 48
+    - 48
+    - 48
+    - 48
+    - 48
+    - 48
+    - 128
+    - 129
+  dim_head: 64
+  heads: 8
+  attn_dropout: 0.1
+  ff_dropout: 0.1
+  flash_attn: true
+  dim_freqs_in: 1025
+  stft_n_fft: 2048
+  stft_hop_length: 512
+  stft_win_length: 2048
+  stft_normalized: false
+  mask_estimator_depth: 2
+  multi_stft_resolution_loss_weight: 1.0
+  multi_stft_resolutions_window_sizes: !!python/tuple
+  - 4096
+  - 2048
+  - 1024
+  - 512
+  - 256
+  multi_stft_hop_size: 147
+  multi_stft_normalized: False
+  mlp_expansion_factor: 4 
+  use_torch_checkpoint: False 
+  skip_connection: False 
+
+training:
+  model_type: satb_wrapper # Tells ZFTurbo to load our custom wrapper
+  batch_size: 10
+  gradient_accumulation_steps: 1
+  grad_clip: 0
+  # --- UPDATED: Aligned to SATB Domain ---
+  instruments:
+  - soprano
+  - alto
+  - tenor
+  - bass
+  lr: 5.0e-05
+  patience: 2
+  reduce_factor: 0.95
+  target_instrument: soprano # Can be set to null/None if training all stems simultaneously
+  num_epochs: 1000
+  num_steps: 1000
+  q: 0.95
+  coarse_loss_clip: true
+  ema_momentum: 0.999
+  optimizer: adam
+  other_fix: false 
+  use_amp: true 
+
+augmentations:
+  enable: true 
+  loudness: true 
+  loudness_min: 0.5
+  loudness_max: 1.5
+
+inference:
+  batch_size: 1
+  dim_t: 256
+  num_overlap: 4

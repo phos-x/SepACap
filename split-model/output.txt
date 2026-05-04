@@ -1,0 +1,972 @@
+GPU Compute Capability below 8.0, using math or mem efficient attention if input tensor is on cuda
+[34m[1mwandb[0m: [33mWARNING[0m If you're specifying your api key in code, ensure this code is not shared publicly.
+[34m[1mwandb[0m: [33mWARNING[0m Consider setting the WANDB_API_KEY environment variable, or running `wandb login` from the command line.
+[34m[1mwandb[0m: [wandb.login()] Using explicit session credentials for https://api.wandb.ai.
+[34m[1mwandb[0m: No netrc file found, creating one.
+[34m[1mwandb[0m: Appending key for api.wandb.ai to your netrc file: /root/.netrc
+[34m[1mwandb[0m: Currently logged in as: [33mphos-x[0m ([33mzahemen9900-ai[0m) to [32mhttps://api.wandb.ai[0m. Use [1m`wandb login --relogin`[0m to force relogin
+[34m[1mwandb[0m: [38;5;178m⢿[0m Waiting for wandb.init()...
+[34m[1mwandb[0m: [38;5;178m⣻[0m Waiting for wandb.init()...
+[34m[1mwandb[0m: Tracking run with wandb version 0.26.1
+[34m[1mwandb[0m: Run data is saved locally in [35m[1m/kaggle/working/MVSEP/wandb/run-20260426_221833-3jotujos[0m
+[34m[1mwandb[0m: Run [1m`wandb offline`[0m to turn off syncing.
+[34m[1mwandb[0m: Syncing run [33mbs_roformer_[soprano-alto-tenor-bass]_2026-04-26[0m
+[34m[1mwandb[0m: ⭐️ View project at [34m[4mhttps://wandb.ai/zahemen9900-ai/msst[0m
+[34m[1mwandb[0m: 🚀 View run at [34m[4mhttps://wandb.ai/zahemen9900-ai/msst/runs/3jotujos[0m
+Use augmentation for training
+0it [00:00, ?it/s]
+Found tracks in dataset: 48
+Initializing EMA with decay: 0.999
+Instruments: ['soprano', 'alto', 'tenor', 'bass']
+Metrics for training: ['si_sdr', 'l1_freq', 'sdr']. Metric for scheduler: sdr
+Patience: 2 Reduce factor: 0.95
+Batch size: 2 Grad accum steps: 5 Num gpus: 1 Effective batch size: 10
+Dataset type: 1
+Optimizer: adam
+Train for: 100 epochs
+Model: BSRoformer
+Total parameters: 34,204,588 (34.2M)
+Trainable parameters: 34,204,524 (34.2M)
+Model size: 134.48 MB
+Number of layers: 403
+Train epoch: 0 Learning rate: 5e-05
+100%|█████████████████| 100/100 [01:50<00:00,  1.11s/it, loss=51.4, avg_loss=97]
+Training loss: 0.9696180233731866
+100%|█| 2/2 [01:40<00:00, 50.34s/it, sdr_soprano=2.22, k_sdr_soprano=84.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: 0.0092 (Std: 0.3542)
+Instr soprano l1_freq: 23.3929 (Std: 0.4318)
+Instr soprano sdr: 2.1956 (Std: 0.0257)
+Instr soprano k_sdr: 84.7385 (Std: 0.0639)
+Instr alto si_sdr: -12.0985 (Std: 1.1408)
+Instr alto l1_freq: 25.9456 (Std: 0.0346)
+Instr alto sdr: -0.2124 (Std: 0.0973)
+Instr alto k_sdr: 78.1192 (Std: 0.2962)
+Instr tenor si_sdr: -11.9729 (Std: 1.6412)
+Instr tenor l1_freq: 26.7379 (Std: 2.7161)
+Instr tenor sdr: -0.3775 (Std: 0.4757)
+Instr tenor k_sdr: 77.5811 (Std: 1.4720)
+Instr bass si_sdr: -16.1659 (Std: 0.2384)
+Instr bass l1_freq: 27.8177 (Std: 0.9604)
+Instr bass sdr: -1.5136 (Std: 0.3276)
+Instr bass k_sdr: 73.8791 (Std: 1.1346)
+Metric avg si_sdr     : -10.0570
+Metric avg l1_freq    : 25.9735
+Metric avg sdr        : 0.0230
+Metric avg k_sdr      : 78.5795
+Elapsed time: 100.73 sec
+Store weights: results//model_bs_roformer_ep_0_sdr_0.0230.ckpt
+Train epoch: 1 Learning rate: 5e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=72.3, avg_loss=88.6]
+Training loss: 0.8862678881734609
+100%|█| 2/2 [01:40<00:00, 50.16s/it, sdr_soprano=2.26, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.2312 (Std: 0.2790)
+Instr soprano l1_freq: 24.2651 (Std: 0.6000)
+Instr soprano sdr: 2.2089 (Std: 0.0502)
+Instr soprano k_sdr: 84.7713 (Std: 0.1248)
+Instr alto si_sdr: -16.3068 (Std: 0.1302)
+Instr alto l1_freq: 24.8601 (Std: 0.0652)
+Instr alto sdr: -1.1227 (Std: 0.0574)
+Instr alto k_sdr: 75.2242 (Std: 0.1910)
+Instr tenor si_sdr: -14.2908 (Std: 1.4729)
+Instr tenor l1_freq: 25.4726 (Std: 2.2412)
+Instr tenor sdr: -1.1964 (Std: 0.5832)
+Instr tenor k_sdr: 74.9208 (Std: 1.9563)
+Instr bass si_sdr: -20.1413 (Std: 0.3839)
+Instr bass l1_freq: 25.9406 (Std: 0.9571)
+Instr bass sdr: -2.6296 (Std: 0.4300)
+Instr bass k_sdr: 69.7441 (Std: 1.6890)
+Metric avg si_sdr     : -12.9925
+Metric avg l1_freq    : 25.1346
+Metric avg sdr        : -0.6850
+Metric avg k_sdr      : 76.1651
+Elapsed time: 100.37 sec
+Train epoch: 2 Learning rate: 5e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=49.9, avg_loss=84.3]
+Training loss: 0.8433973409235478
+100%|█| 2/2 [01:40<00:00, 50.25s/it, sdr_soprano=1.81, k_sdr_soprano=83.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.5354 (Std: 0.1626)
+Instr soprano l1_freq: 24.0872 (Std: 0.4526)
+Instr soprano sdr: 1.8075 (Std: 0.0010)
+Instr soprano k_sdr: 83.7579 (Std: 0.0026)
+Instr alto si_sdr: -21.0754 (Std: 1.0227)
+Instr alto l1_freq: 24.3236 (Std: 0.1869)
+Instr alto sdr: -1.3489 (Std: 0.1873)
+Instr alto k_sdr: 74.4579 (Std: 0.6377)
+Instr tenor si_sdr: -17.1811 (Std: 0.8744)
+Instr tenor l1_freq: 25.0095 (Std: 2.3895)
+Instr tenor sdr: -1.3697 (Std: 0.4032)
+Instr tenor k_sdr: 74.3641 (Std: 1.3761)
+Instr bass si_sdr: -22.4078 (Std: 0.0528)
+Instr bass l1_freq: 25.6910 (Std: 0.8974)
+Instr bass sdr: -2.6416 (Std: 0.5565)
+Instr bass k_sdr: 69.6677 (Std: 2.1902)
+Metric avg si_sdr     : -15.7999
+Metric avg l1_freq    : 24.7778
+Metric avg sdr        : -0.8882
+Metric avg k_sdr      : 75.5619
+Elapsed time: 100.55 sec
+Train epoch: 3 Learning rate: 5e-05
+100%|████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=186, avg_loss=88.4]
+Training loss: 0.8843633674085141
+100%|█| 2/2 [01:40<00:00, 50.22s/it, sdr_soprano=2.17, k_sdr_soprano=84.7, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.6921 (Std: 0.2725)
+Instr soprano l1_freq: 24.4808 (Std: 0.6308)
+Instr soprano sdr: 2.0846 (Std: 0.0865)
+Instr soprano k_sdr: 84.4604 (Std: 0.2172)
+Instr alto si_sdr: -17.5988 (Std: 0.4181)
+Instr alto l1_freq: 24.1761 (Std: 0.0170)
+Instr alto sdr: -1.2403 (Std: 0.0507)
+Instr alto k_sdr: 74.8311 (Std: 0.1706)
+Instr tenor si_sdr: -15.1913 (Std: 1.3893)
+Instr tenor l1_freq: 24.6212 (Std: 2.1233)
+Instr tenor sdr: -1.3401 (Std: 0.6694)
+Instr tenor k_sdr: 74.4149 (Std: 2.2797)
+Instr bass si_sdr: -20.4340 (Std: 0.4526)
+Instr bass l1_freq: 25.1352 (Std: 0.9680)
+Instr bass sdr: -2.6665 (Std: 0.2851)
+Instr bass k_sdr: 69.6232 (Std: 1.1241)
+Metric avg si_sdr     : -13.7291
+Metric avg l1_freq    : 24.6033
+Metric avg sdr        : -0.7906
+Metric avg k_sdr      : 75.8324
+Elapsed time: 100.50 sec
+Train epoch: 4 Learning rate: 4.75e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=67.2, avg_loss=79.1]
+Training loss: 0.7905466176569462
+100%|█| 2/2 [01:40<00:00, 50.17s/it, sdr_soprano=1.8, k_sdr_soprano=83.7, si_sdr
+Num overlap: 4
+Instr soprano si_sdr: -2.2718 (Std: 0.1757)
+Instr soprano l1_freq: 23.9659 (Std: 0.3699)
+Instr soprano sdr: 1.8276 (Std: 0.0310)
+Instr soprano k_sdr: 83.8095 (Std: 0.0794)
+Instr alto si_sdr: -19.0547 (Std: 0.4232)
+Instr alto l1_freq: 24.4422 (Std: 0.1847)
+Instr alto sdr: -1.1185 (Std: 0.1658)
+Instr alto k_sdr: 75.2343 (Std: 0.5510)
+Instr tenor si_sdr: -17.2092 (Std: 0.6826)
+Instr tenor l1_freq: 24.9170 (Std: 2.5390)
+Instr tenor sdr: -1.2102 (Std: 0.2929)
+Instr tenor k_sdr: 74.9180 (Std: 0.9830)
+Instr bass si_sdr: -22.0282 (Std: 0.1982)
+Instr bass l1_freq: 25.6666 (Std: 0.7265)
+Instr bass sdr: -2.4234 (Std: 0.6144)
+Instr bass k_sdr: 70.5023 (Std: 2.3569)
+Metric avg si_sdr     : -15.1410
+Metric avg l1_freq    : 24.7479
+Metric avg sdr        : -0.7311
+Metric avg k_sdr      : 76.1160
+Elapsed time: 100.39 sec
+Train epoch: 5 Learning rate: 4.75e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=78.1, avg_loss=86.6]
+Training loss: 0.8657185887917876
+100%|█| 2/2 [01:40<00:00, 50.25s/it, sdr_soprano=2.24, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.4449 (Std: 0.4098)
+Instr soprano l1_freq: 24.5319 (Std: 0.6445)
+Instr soprano sdr: 2.1493 (Std: 0.0917)
+Instr soprano k_sdr: 84.6224 (Std: 0.2290)
+Instr alto si_sdr: -16.9177 (Std: 0.9964)
+Instr alto l1_freq: 24.3070 (Std: 0.0198)
+Instr alto sdr: -1.1772 (Std: 0.0074)
+Instr alto k_sdr: 75.0431 (Std: 0.0248)
+Instr tenor si_sdr: -15.4314 (Std: 1.0437)
+Instr tenor l1_freq: 24.6311 (Std: 2.2123)
+Instr tenor sdr: -1.3292 (Std: 0.5307)
+Instr tenor k_sdr: 74.4814 (Std: 1.8041)
+Instr bass si_sdr: -20.5316 (Std: 0.6170)
+Instr bass l1_freq: 25.0586 (Std: 0.8556)
+Instr bass sdr: -2.6682 (Std: 0.4199)
+Instr bass k_sdr: 69.5942 (Std: 1.6569)
+Metric avg si_sdr     : -13.5814
+Metric avg l1_freq    : 24.6322
+Metric avg sdr        : -0.7563
+Metric avg k_sdr      : 75.9353
+Elapsed time: 100.55 sec
+Train epoch: 6 Learning rate: 4.75e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=87.7, avg_loss=88.8]
+Training loss: 0.8881260627880693
+100%|█| 2/2 [01:40<00:00, 50.28s/it, sdr_soprano=2.53, k_sdr_soprano=85.6, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.2562 (Std: 0.5342)
+Instr soprano l1_freq: 25.0561 (Std: 0.8125)
+Instr soprano sdr: 2.3599 (Std: 0.1693)
+Instr soprano k_sdr: 85.1423 (Std: 0.4163)
+Instr alto si_sdr: -16.2275 (Std: 1.0898)
+Instr alto l1_freq: 23.7380 (Std: 0.0391)
+Instr alto sdr: -1.6048 (Std: 0.0126)
+Instr alto k_sdr: 73.5814 (Std: 0.0441)
+Instr tenor si_sdr: -14.0482 (Std: 1.3715)
+Instr tenor l1_freq: 24.0680 (Std: 1.9321)
+Instr tenor sdr: -1.7145 (Std: 0.6754)
+Instr tenor k_sdr: 73.1085 (Std: 2.3933)
+Instr bass si_sdr: -20.3176 (Std: 0.7198)
+Instr bass l1_freq: 24.0328 (Std: 0.7642)
+Instr bass sdr: -3.4088 (Std: 0.5213)
+Instr bass k_sdr: 66.5006 (Std: 2.2593)
+Metric avg si_sdr     : -12.9624
+Metric avg l1_freq    : 24.2238
+Metric avg sdr        : -1.0920
+Metric avg k_sdr      : 74.5832
+Elapsed time: 100.62 sec
+Train epoch: 7 Learning rate: 4.5125e-05
+100%|████████████████| 100/100 [01:54<00:00,  1.14s/it, loss=124, avg_loss=83.1]
+Training loss: 0.8311923462897539
+100%|█| 2/2 [01:40<00:00, 50.41s/it, sdr_soprano=2.54, k_sdr_soprano=85.6, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.2748 (Std: 0.5864)
+Instr soprano l1_freq: 25.0287 (Std: 0.8186)
+Instr soprano sdr: 2.3448 (Std: 0.1929)
+Instr soprano k_sdr: 85.1043 (Std: 0.4749)
+Instr alto si_sdr: -16.9598 (Std: 1.6725)
+Instr alto l1_freq: 23.7737 (Std: 0.1087)
+Instr alto sdr: -1.6000 (Std: 0.0722)
+Instr alto k_sdr: 73.5970 (Std: 0.2524)
+Instr tenor si_sdr: -14.7412 (Std: 1.3109)
+Instr tenor l1_freq: 24.1041 (Std: 1.9437)
+Instr tenor sdr: -1.7403 (Std: 0.6946)
+Instr tenor k_sdr: 73.0116 (Std: 2.4684)
+Instr bass si_sdr: -20.2257 (Std: 0.8868)
+Instr bass l1_freq: 24.1939 (Std: 0.8067)
+Instr bass sdr: -3.3132 (Std: 0.4367)
+Instr bass k_sdr: 66.9362 (Std: 1.8679)
+Metric avg si_sdr     : -13.3004
+Metric avg l1_freq    : 24.2751
+Metric avg sdr        : -1.0772
+Metric avg k_sdr      : 74.6623
+Elapsed time: 100.88 sec
+Train epoch: 8 Learning rate: 4.5125e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=83.4, avg_loss=85.6]
+Training loss: 0.8563803147524596
+100%|█| 2/2 [01:40<00:00, 50.32s/it, sdr_soprano=2.38, k_sdr_soprano=85.2, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.3339 (Std: 0.3258)
+Instr soprano l1_freq: 24.8476 (Std: 0.7055)
+Instr soprano sdr: 2.2802 (Std: 0.0990)
+Instr soprano k_sdr: 84.9476 (Std: 0.2449)
+Instr alto si_sdr: -16.1691 (Std: 1.4105)
+Instr alto l1_freq: 24.0443 (Std: 0.0817)
+Instr alto sdr: -1.3691 (Std: 0.0959)
+Instr alto k_sdr: 74.3937 (Std: 0.3270)
+Instr tenor si_sdr: -15.6438 (Std: 1.3056)
+Instr tenor l1_freq: 24.1478 (Std: 2.0411)
+Instr tenor sdr: -1.6495 (Std: 0.6747)
+Instr tenor k_sdr: 73.3388 (Std: 2.3740)
+Instr bass si_sdr: -20.0256 (Std: 0.8107)
+Instr bass l1_freq: 24.5755 (Std: 0.8625)
+Instr bass sdr: -3.0419 (Std: 0.3701)
+Instr bass k_sdr: 68.0929 (Std: 1.5285)
+Metric avg si_sdr     : -13.2931
+Metric avg l1_freq    : 24.4038
+Metric avg sdr        : -0.9451
+Metric avg k_sdr      : 75.1933
+Elapsed time: 100.70 sec
+Train epoch: 9 Learning rate: 4.5125e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=97.3, avg_loss=82.8]
+Training loss: 0.8280947003513575
+100%|█| 2/2 [01:40<00:00, 50.35s/it, sdr_soprano=2.25, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.5751 (Std: 0.3524)
+Instr soprano l1_freq: 24.6925 (Std: 0.6179)
+Instr soprano sdr: 2.1779 (Std: 0.0748)
+Instr soprano k_sdr: 84.6939 (Std: 0.1863)
+Instr alto si_sdr: -17.1055 (Std: 1.1225)
+Instr alto l1_freq: 24.1170 (Std: 0.0105)
+Instr alto sdr: -1.3991 (Std: 0.0412)
+Instr alto k_sdr: 74.2922 (Std: 0.1410)
+Instr tenor si_sdr: -15.9150 (Std: 1.0631)
+Instr tenor l1_freq: 24.3495 (Std: 2.1751)
+Instr tenor sdr: -1.5936 (Std: 0.5228)
+Instr tenor k_sdr: 73.5695 (Std: 1.8273)
+Instr bass si_sdr: -20.5130 (Std: 0.6909)
+Instr bass l1_freq: 24.8417 (Std: 0.7911)
+Instr bass sdr: -3.0020 (Std: 0.5285)
+Instr bass k_sdr: 68.2212 (Std: 2.1734)
+Metric avg si_sdr     : -13.7772
+Metric avg l1_freq    : 24.5002
+Metric avg sdr        : -0.9542
+Metric avg k_sdr      : 75.1942
+Elapsed time: 100.76 sec
+Train epoch: 10 Learning rate: 4.2868749999999995e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=96.7, avg_loss=82.3]
+Training loss: 0.823030554316938
+100%|█| 2/2 [01:40<00:00, 50.37s/it, sdr_soprano=2.02, k_sdr_soprano=84.3, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.8951 (Std: 0.1662)
+Instr soprano l1_freq: 24.3162 (Std: 0.5671)
+Instr soprano sdr: 1.9958 (Std: 0.0253)
+Instr soprano k_sdr: 84.2374 (Std: 0.0638)
+Instr alto si_sdr: -17.0100 (Std: 1.1073)
+Instr alto l1_freq: 24.3633 (Std: 0.0219)
+Instr alto sdr: -1.1203 (Std: 0.0305)
+Instr alto k_sdr: 75.2327 (Std: 0.1014)
+Instr tenor si_sdr: -17.0437 (Std: 0.9837)
+Instr tenor l1_freq: 24.5326 (Std: 2.3247)
+Instr tenor sdr: -1.3978 (Std: 0.5140)
+Instr tenor k_sdr: 74.2500 (Std: 1.7598)
+Instr bass si_sdr: -21.1142 (Std: 0.7940)
+Instr bass l1_freq: 25.3349 (Std: 0.8947)
+Instr bass sdr: -2.5926 (Std: 0.3798)
+Instr bass k_sdr: 69.8990 (Std: 1.4850)
+Metric avg si_sdr     : -14.2657
+Metric avg l1_freq    : 24.6367
+Metric avg sdr        : -0.7787
+Metric avg k_sdr      : 75.9048
+Elapsed time: 100.80 sec
+Train epoch: 11 Learning rate: 4.2868749999999995e-05
+100%|█████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=35, avg_loss=86.9]
+Training loss: 0.868564760684967
+100%|█| 2/2 [01:40<00:00, 50.37s/it, sdr_soprano=2.09, k_sdr_soprano=84.5, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.6721 (Std: 0.1676)
+Instr soprano l1_freq: 24.4231 (Std: 0.5848)
+Instr soprano sdr: 2.0741 (Std: 0.0197)
+Instr soprano k_sdr: 84.4346 (Std: 0.0494)
+Instr alto si_sdr: -16.8356 (Std: 0.9883)
+Instr alto l1_freq: 24.3907 (Std: 0.0364)
+Instr alto sdr: -1.1466 (Std: 0.0068)
+Instr alto k_sdr: 75.1453 (Std: 0.0225)
+Instr tenor si_sdr: -16.3257 (Std: 0.9451)
+Instr tenor l1_freq: 24.6213 (Std: 2.3045)
+Instr tenor sdr: -1.3804 (Std: 0.5074)
+Instr tenor k_sdr: 74.3107 (Std: 1.7340)
+Instr bass si_sdr: -21.1788 (Std: 0.8629)
+Instr bass l1_freq: 25.2852 (Std: 0.9155)
+Instr bass sdr: -2.6597 (Std: 0.4090)
+Instr bass k_sdr: 69.6299 (Std: 1.6119)
+Metric avg si_sdr     : -14.0031
+Metric avg l1_freq    : 24.6801
+Metric avg sdr        : -0.7782
+Metric avg k_sdr      : 75.8801
+Elapsed time: 100.79 sec
+Train epoch: 12 Learning rate: 4.2868749999999995e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=50.8, avg_loss=82.5]
+Training loss: 0.8249718990176916
+100%|█| 2/2 [01:40<00:00, 50.43s/it, sdr_soprano=2.23, k_sdr_soprano=84.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.7039 (Std: 0.3500)
+Instr soprano l1_freq: 24.6291 (Std: 0.6825)
+Instr soprano sdr: 2.1476 (Std: 0.0793)
+Instr soprano k_sdr: 84.6182 (Std: 0.1980)
+Instr alto si_sdr: -16.6312 (Std: 1.6872)
+Instr alto l1_freq: 24.1999 (Std: 0.0539)
+Instr alto sdr: -1.3944 (Std: 0.0099)
+Instr alto k_sdr: 74.3087 (Std: 0.0339)
+Instr tenor si_sdr: -16.4726 (Std: 0.8915)
+Instr tenor l1_freq: 24.2959 (Std: 2.2383)
+Instr tenor sdr: -1.6899 (Std: 0.5131)
+Instr tenor k_sdr: 73.2325 (Std: 1.8119)
+Instr bass si_sdr: -21.4161 (Std: 1.0166)
+Instr bass l1_freq: 24.8342 (Std: 0.8178)
+Instr bass sdr: -3.1078 (Std: 0.5224)
+Instr bass k_sdr: 67.7834 (Std: 2.1771)
+Metric avg si_sdr     : -14.0560
+Metric avg l1_freq    : 24.4898
+Metric avg sdr        : -1.0111
+Metric avg k_sdr      : 74.9857
+Elapsed time: 100.91 sec
+Train epoch: 13 Learning rate: 4.072531249999999e-05
+100%|████████████████| 100/100 [01:54<00:00,  1.14s/it, loss=112, avg_loss=81.1]
+Training loss: 0.8106783539056778
+100%|█| 2/2 [01:41<00:00, 50.68s/it, sdr_soprano=2.11, k_sdr_soprano=84.5, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.0017 (Std: 0.4198)
+Instr soprano l1_freq: 24.4557 (Std: 0.6374)
+Instr soprano sdr: 2.0298 (Std: 0.0815)
+Instr soprano k_sdr: 84.3226 (Std: 0.2054)
+Instr alto si_sdr: -18.4546 (Std: 0.8899)
+Instr alto l1_freq: 24.1005 (Std: 0.0716)
+Instr alto sdr: -1.4871 (Std: 0.1442)
+Instr alto k_sdr: 73.9865 (Std: 0.4980)
+Instr tenor si_sdr: -16.6857 (Std: 1.1467)
+Instr tenor l1_freq: 24.4160 (Std: 2.2626)
+Instr tenor sdr: -1.6287 (Std: 0.4370)
+Instr tenor k_sdr: 73.4617 (Std: 1.5329)
+Instr bass si_sdr: -22.0441 (Std: 0.7087)
+Instr bass l1_freq: 24.9896 (Std: 0.7618)
+Instr bass sdr: -3.0654 (Std: 0.6444)
+Instr bass k_sdr: 67.9228 (Std: 2.6735)
+Metric avg si_sdr     : -14.7965
+Metric avg l1_freq    : 24.4904
+Metric avg sdr        : -1.0379
+Metric avg k_sdr      : 74.9234
+Elapsed time: 101.41 sec
+Train epoch: 14 Learning rate: 4.072531249999999e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=71.5, avg_loss=84.6]
+Training loss: 0.8455321356654167
+100%|█| 2/2 [01:41<00:00, 50.54s/it, sdr_soprano=2.22, k_sdr_soprano=84.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.1327 (Std: 0.5185)
+Instr soprano l1_freq: 24.7121 (Std: 0.8730)
+Instr soprano sdr: 2.0498 (Std: 0.1678)
+Instr soprano k_sdr: 84.3710 (Std: 0.4223)
+Instr alto si_sdr: -17.7169 (Std: 1.6556)
+Instr alto l1_freq: 23.8071 (Std: 0.0923)
+Instr alto sdr: -1.6987 (Std: 0.0391)
+Instr alto k_sdr: 73.2511 (Std: 0.1380)
+Instr tenor si_sdr: -15.7554 (Std: 1.8130)
+Instr tenor l1_freq: 24.0250 (Std: 1.9082)
+Instr tenor sdr: -1.8720 (Std: 0.7148)
+Instr tenor k_sdr: 72.5326 (Std: 2.5774)
+Instr bass si_sdr: -21.8992 (Std: 1.5097)
+Instr bass l1_freq: 24.3262 (Std: 0.8655)
+Instr bass sdr: -3.4509 (Std: 0.4506)
+Instr bass k_sdr: 66.3368 (Std: 1.9627)
+Metric avg si_sdr     : -14.3761
+Metric avg l1_freq    : 24.2176
+Metric avg sdr        : -1.2429
+Metric avg k_sdr      : 74.1229
+Elapsed time: 101.13 sec
+Train epoch: 15 Learning rate: 4.072531249999999e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=45.9, avg_loss=79.2]
+Training loss: 0.7915359053760767
+100%|█| 2/2 [01:40<00:00, 50.46s/it, sdr_soprano=2.05, k_sdr_soprano=84.4, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.3809 (Std: 0.4919)
+Instr soprano l1_freq: 24.4595 (Std: 0.7760)
+Instr soprano sdr: 1.9226 (Std: 0.1272)
+Instr soprano k_sdr: 84.0504 (Std: 0.3233)
+Instr alto si_sdr: -18.9575 (Std: 0.8351)
+Instr alto l1_freq: 24.0244 (Std: 0.0461)
+Instr alto sdr: -1.5298 (Std: 0.0731)
+Instr alto k_sdr: 73.8416 (Std: 0.2537)
+Instr tenor si_sdr: -16.0529 (Std: 1.4595)
+Instr tenor l1_freq: 24.4067 (Std: 2.0958)
+Instr tenor sdr: -1.6045 (Std: 0.5620)
+Instr tenor k_sdr: 73.5235 (Std: 1.9671)
+Instr bass si_sdr: -22.6558 (Std: 1.2301)
+Instr bass l1_freq: 24.7869 (Std: 0.8566)
+Instr bass sdr: -3.0979 (Std: 0.5076)
+Instr bass k_sdr: 67.8288 (Std: 2.1127)
+Metric avg si_sdr     : -15.0118
+Metric avg l1_freq    : 24.4194
+Metric avg sdr        : -1.0774
+Metric avg k_sdr      : 74.8111
+Elapsed time: 100.98 sec
+Train epoch: 16 Learning rate: 3.868904687499999e-05
+100%|████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=101, avg_loss=86.1]
+Training loss: 0.8612270232290029
+100%|█| 2/2 [01:41<00:00, 50.54s/it, sdr_soprano=2.19, k_sdr_soprano=84.7, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.2689 (Std: 0.5790)
+Instr soprano l1_freq: 24.7651 (Std: 0.9167)
+Instr soprano sdr: 2.0011 (Std: 0.1854)
+Instr soprano k_sdr: 84.2475 (Std: 0.4685)
+Instr alto si_sdr: -18.5699 (Std: 0.6785)
+Instr alto l1_freq: 23.7332 (Std: 0.0043)
+Instr alto sdr: -1.7731 (Std: 0.0665)
+Instr alto k_sdr: 72.9866 (Std: 0.2368)
+Instr tenor si_sdr: -15.0061 (Std: 1.6824)
+Instr tenor l1_freq: 24.1518 (Std: 1.9046)
+Instr tenor sdr: -1.7998 (Std: 0.6856)
+Instr tenor k_sdr: 72.8009 (Std: 2.4524)
+Instr bass si_sdr: -22.1530 (Std: 1.0875)
+Instr bass l1_freq: 24.2890 (Std: 0.8664)
+Instr bass sdr: -3.4752 (Std: 0.5140)
+Instr bass k_sdr: 66.2128 (Std: 2.2471)
+Metric avg si_sdr     : -14.4995
+Metric avg l1_freq    : 24.2348
+Metric avg sdr        : -1.2618
+Metric avg k_sdr      : 74.0619
+Elapsed time: 101.12 sec
+Train epoch: 17 Learning rate: 3.868904687499999e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=42.8, avg_loss=82.1]
+Training loss: 0.8208140462636948
+100%|█| 2/2 [01:40<00:00, 50.40s/it, sdr_soprano=2.27, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.0548 (Std: 0.5146)
+Instr soprano l1_freq: 24.8913 (Std: 0.9521)
+Instr soprano sdr: 2.0905 (Std: 0.1804)
+Instr soprano k_sdr: 84.4728 (Std: 0.4526)
+Instr alto si_sdr: -17.7153 (Std: 0.9249)
+Instr alto l1_freq: 23.5484 (Std: 0.0242)
+Instr alto sdr: -1.9047 (Std: 0.0694)
+Instr alto k_sdr: 72.5148 (Std: 0.2505)
+Instr tenor si_sdr: -14.9982 (Std: 1.5345)
+Instr tenor l1_freq: 23.8260 (Std: 1.8523)
+Instr tenor sdr: -2.0076 (Std: 0.6884)
+Instr tenor k_sdr: 72.0455 (Std: 2.5193)
+Instr bass si_sdr: -21.9926 (Std: 1.1970)
+Instr bass l1_freq: 23.8780 (Std: 0.8280)
+Instr bass sdr: -3.7485 (Std: 0.5616)
+Instr bass k_sdr: 64.9758 (Std: 2.5489)
+Metric avg si_sdr     : -14.1902
+Metric avg l1_freq    : 24.0359
+Metric avg sdr        : -1.3926
+Metric avg k_sdr      : 73.5022
+Elapsed time: 100.85 sec
+Train epoch: 18 Learning rate: 3.868904687499999e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=42.5, avg_loss=80.7]
+Training loss: 0.8070770828053355
+100%|█| 2/2 [01:40<00:00, 50.41s/it, sdr_soprano=2.36, k_sdr_soprano=85.1, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.6298 (Std: 0.4919)
+Instr soprano l1_freq: 24.9186 (Std: 0.8040)
+Instr soprano sdr: 2.2141 (Std: 0.1422)
+Instr soprano k_sdr: 84.7826 (Std: 0.3534)
+Instr alto si_sdr: -17.3162 (Std: 0.5630)
+Instr alto l1_freq: 23.7721 (Std: 0.0467)
+Instr alto sdr: -1.6678 (Std: 0.1197)
+Instr alto k_sdr: 73.3578 (Std: 0.4213)
+Instr tenor si_sdr: -14.8958 (Std: 1.1987)
+Instr tenor l1_freq: 24.0603 (Std: 1.9955)
+Instr tenor sdr: -1.7628 (Std: 0.5744)
+Instr tenor k_sdr: 72.9607 (Std: 2.0452)
+Instr bass si_sdr: -21.4819 (Std: 0.7158)
+Instr bass l1_freq: 24.1734 (Std: 0.7959)
+Instr bass sdr: -3.4246 (Std: 0.6034)
+Instr bass k_sdr: 66.4055 (Std: 2.6216)
+Metric avg si_sdr     : -13.8309
+Metric avg l1_freq    : 24.2311
+Metric avg sdr        : -1.1602
+Metric avg k_sdr      : 74.3766
+Elapsed time: 100.87 sec
+Train epoch: 19 Learning rate: 3.675459453124999e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=55.4, avg_loss=82.6]
+Training loss: 0.8256939508020877
+100%|█| 2/2 [01:40<00:00, 50.42s/it, sdr_soprano=2.31, k_sdr_soprano=85, si_sdr_
+Num overlap: 4
+Instr soprano si_sdr: -1.8954 (Std: 0.5147)
+Instr soprano l1_freq: 24.8796 (Std: 0.8988)
+Instr soprano sdr: 2.1385 (Std: 0.1717)
+Instr soprano k_sdr: 84.5933 (Std: 0.4292)
+Instr alto si_sdr: -17.9718 (Std: 1.4045)
+Instr alto l1_freq: 23.7164 (Std: 0.1061)
+Instr alto sdr: -1.7597 (Std: 0.0275)
+Instr alto k_sdr: 73.0349 (Std: 0.0977)
+Instr tenor si_sdr: -15.4790 (Std: 1.4543)
+Instr tenor l1_freq: 24.0041 (Std: 1.8794)
+Instr tenor sdr: -1.8979 (Std: 0.7062)
+Instr tenor k_sdr: 72.4410 (Std: 2.5537)
+Instr bass si_sdr: -22.1404 (Std: 1.1770)
+Instr bass l1_freq: 24.1935 (Std: 0.9159)
+Instr bass sdr: -3.5199 (Std: 0.4552)
+Instr bass k_sdr: 66.0331 (Std: 2.0013)
+Metric avg si_sdr     : -14.3716
+Metric avg l1_freq    : 24.1984
+Metric avg sdr        : -1.2598
+Metric avg k_sdr      : 74.0256
+Elapsed time: 100.91 sec
+Train epoch: 20 Learning rate: 3.675459453124999e-05
+100%|████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=155, avg_loss=85.6]
+Training loss: 0.855984708480537
+100%|█| 2/2 [01:40<00:00, 50.34s/it, sdr_soprano=2.39, k_sdr_soprano=85.2, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.5787 (Std: 0.5590)
+Instr soprano l1_freq: 24.8799 (Std: 0.7782)
+Instr soprano sdr: 2.2283 (Std: 0.1568)
+Instr soprano k_sdr: 84.8176 (Std: 0.3893)
+Instr alto si_sdr: -18.0387 (Std: 0.4962)
+Instr alto l1_freq: 23.7536 (Std: 0.1151)
+Instr alto sdr: -1.8023 (Std: 0.2451)
+Instr alto k_sdr: 72.8719 (Std: 0.8753)
+Instr tenor si_sdr: -15.2971 (Std: 0.9248)
+Instr tenor l1_freq: 24.1739 (Std: 2.1083)
+Instr tenor sdr: -1.8695 (Std: 0.4319)
+Instr tenor k_sdr: 72.6058 (Std: 1.5548)
+Instr bass si_sdr: -21.9334 (Std: 0.3585)
+Instr bass l1_freq: 24.2655 (Std: 0.6698)
+Instr bass sdr: -3.5719 (Std: 0.7951)
+Instr bass k_sdr: 65.6754 (Std: 3.5292)
+Metric avg si_sdr     : -14.2120
+Metric avg l1_freq    : 24.2682
+Metric avg sdr        : -1.2538
+Metric avg k_sdr      : 73.9927
+Elapsed time: 100.73 sec
+Train epoch: 21 Learning rate: 3.675459453124999e-05
+100%|█████████████████| 100/100 [01:54<00:00,  1.14s/it, loss=97.7, avg_loss=80]
+Training loss: 0.7999824669212103
+100%|█| 2/2 [01:40<00:00, 50.33s/it, sdr_soprano=2.03, k_sdr_soprano=84.3, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.9557 (Std: 0.1351)
+Instr soprano l1_freq: 24.4523 (Std: 0.4947)
+Instr soprano sdr: 2.0513 (Std: 0.0174)
+Instr soprano k_sdr: 84.3773 (Std: 0.0438)
+Instr alto si_sdr: -19.1767 (Std: 0.3886)
+Instr alto l1_freq: 24.0244 (Std: 0.1652)
+Instr alto sdr: -1.5590 (Std: 0.2236)
+Instr alto k_sdr: 73.7318 (Std: 0.7782)
+Instr tenor si_sdr: -17.7203 (Std: 0.8340)
+Instr tenor l1_freq: 24.3745 (Std: 2.3330)
+Instr tenor sdr: -1.7263 (Std: 0.3612)
+Instr tenor k_sdr: 73.1287 (Std: 1.2799)
+Instr bass si_sdr: -22.8733 (Std: 0.1024)
+Instr bass l1_freq: 24.9594 (Std: 0.7197)
+Instr bass sdr: -3.1397 (Std: 0.7386)
+Instr bass k_sdr: 67.5768 (Std: 3.0957)
+Metric avg si_sdr     : -15.4315
+Metric avg l1_freq    : 24.4526
+Metric avg sdr        : -1.0934
+Metric avg k_sdr      : 74.7037
+Elapsed time: 100.71 sec
+Train epoch: 22 Learning rate: 3.4916864804687486e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.13s/it, loss=88.1, avg_loss=82.1]
+Training loss: 0.8206379529088735
+100%|█| 2/2 [01:40<00:00, 50.29s/it, sdr_soprano=2.06, k_sdr_soprano=84.4, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.7103 (Std: 0.2374)
+Instr soprano l1_freq: 24.4114 (Std: 0.4788)
+Instr soprano sdr: 2.0725 (Std: 0.0142)
+Instr soprano k_sdr: 84.4306 (Std: 0.0358)
+Instr alto si_sdr: -17.1156 (Std: 1.2287)
+Instr alto l1_freq: 24.3478 (Std: 0.1045)
+Instr alto sdr: -1.2386 (Std: 0.1458)
+Instr alto k_sdr: 74.8337 (Std: 0.4908)
+Instr tenor si_sdr: -17.7939 (Std: 0.6424)
+Instr tenor l1_freq: 24.4722 (Std: 2.4599)
+Instr tenor sdr: -1.5311 (Std: 0.3043)
+Instr tenor k_sdr: 73.8210 (Std: 1.0558)
+Instr bass si_sdr: -22.1010 (Std: 0.4851)
+Instr bass l1_freq: 25.1886 (Std: 0.6893)
+Instr bass sdr: -2.8365 (Std: 0.7039)
+Instr bass k_sdr: 68.8430 (Std: 2.8391)
+Metric avg si_sdr     : -14.6802
+Metric avg l1_freq    : 24.6050
+Metric avg sdr        : -0.8834
+Metric avg k_sdr      : 75.4821
+Elapsed time: 100.64 sec
+Train epoch: 23 Learning rate: 3.4916864804687486e-05
+100%|████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=102, avg_loss=75.9]
+Training loss: 0.7594473171979189
+100%|█| 2/2 [01:40<00:00, 50.33s/it, sdr_soprano=1.9, k_sdr_soprano=84, si_sdr_s
+Num overlap: 4
+Instr soprano si_sdr: -2.1650 (Std: 0.2187)
+Instr soprano l1_freq: 24.1352 (Std: 0.5438)
+Instr soprano sdr: 1.8953 (Std: 0.0070)
+Instr soprano k_sdr: 83.9823 (Std: 0.0179)
+Instr alto si_sdr: -17.5995 (Std: 1.6934)
+Instr alto l1_freq: 24.4762 (Std: 0.0393)
+Instr alto sdr: -1.1049 (Std: 0.0213)
+Instr alto k_sdr: 75.2841 (Std: 0.0709)
+Instr tenor si_sdr: -18.1138 (Std: 0.9911)
+Instr tenor l1_freq: 24.6394 (Std: 2.4373)
+Instr tenor sdr: -1.3906 (Std: 0.3944)
+Instr tenor k_sdr: 74.2941 (Std: 1.3489)
+Instr bass si_sdr: -23.1055 (Std: 1.2065)
+Instr bass l1_freq: 25.4672 (Std: 0.8293)
+Instr bass sdr: -2.6043 (Std: 0.5067)
+Instr bass k_sdr: 69.8268 (Std: 1.9847)
+Metric avg si_sdr     : -15.2460
+Metric avg l1_freq    : 24.6795
+Metric avg sdr        : -0.8011
+Metric avg k_sdr      : 75.8468
+Elapsed time: 100.71 sec
+Train epoch: 24 Learning rate: 3.4916864804687486e-05
+100%|████████████████| 100/100 [01:54<00:00,  1.14s/it, loss=145, avg_loss=85.9]
+Training loss: 0.8585235595703125
+100%|█| 2/2 [01:40<00:00, 50.32s/it, sdr_soprano=2.24, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.6910 (Std: 0.2982)
+Instr soprano l1_freq: 24.7585 (Std: 0.6617)
+Instr soprano sdr: 2.1854 (Std: 0.0588)
+Instr soprano k_sdr: 84.7129 (Std: 0.1464)
+Instr alto si_sdr: -17.5242 (Std: 0.9696)
+Instr alto l1_freq: 23.8719 (Std: 0.0908)
+Instr alto sdr: -1.6941 (Std: 0.1905)
+Instr alto k_sdr: 73.2608 (Std: 0.6724)
+Instr tenor si_sdr: -17.3101 (Std: 0.6349)
+Instr tenor l1_freq: 23.9763 (Std: 2.2256)
+Instr tenor sdr: -1.9742 (Std: 0.3933)
+Instr tenor k_sdr: 72.2327 (Std: 1.4323)
+Instr bass si_sdr: -22.2902 (Std: 0.4899)
+Instr bass l1_freq: 24.4170 (Std: 0.6927)
+Instr bass sdr: -3.4864 (Std: 0.7619)
+Instr bass k_sdr: 66.0709 (Std: 3.3421)
+Metric avg si_sdr     : -14.7039
+Metric avg l1_freq    : 24.2559
+Metric avg sdr        : -1.2423
+Metric avg k_sdr      : 74.0693
+Elapsed time: 100.69 sec
+Train epoch: 25 Learning rate: 3.317102156445311e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=71.8, avg_loss=81.3]
+Training loss: 0.8130842424929142
+100%|████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=110, avg_loss=81.2]
+Training loss: 0.8119185160845518
+100%|█| 2/2 [01:40<00:00, 50.38s/it, sdr_soprano=2.32, k_sdr_soprano=85, si_sdr_
+Num overlap: 4
+Instr soprano si_sdr: -1.4453 (Std: 0.2210)
+Instr soprano l1_freq: 24.9528 (Std: 0.6297)
+Instr soprano sdr: 2.2791 (Std: 0.0420)
+Instr soprano k_sdr: 84.9457 (Std: 0.1039)
+Instr alto si_sdr: -16.8746 (Std: 1.3278)
+Instr alto l1_freq: 23.8518 (Std: 0.0281)
+Instr alto sdr: -1.6077 (Std: 0.0562)
+Instr alto k_sdr: 73.5704 (Std: 0.1965)
+Instr tenor si_sdr: -16.3715 (Std: 1.2515)
+Instr tenor l1_freq: 23.9362 (Std: 2.1431)
+Instr tenor sdr: -1.8813 (Std: 0.5549)
+Instr tenor k_sdr: 72.5393 (Std: 2.0012)
+Instr bass si_sdr: -22.0056 (Std: 0.8199)
+Instr bass l1_freq: 24.3066 (Std: 0.7309)
+Instr bass sdr: -3.4203 (Std: 0.5998)
+Instr bass k_sdr: 66.4251 (Std: 2.6047)
+Metric avg si_sdr     : -14.1743
+Metric avg l1_freq    : 24.2618
+Metric avg sdr        : -1.1576
+Metric avg k_sdr      : 74.3701
+Elapsed time: 100.81 sec
+Train epoch: 27 Learning rate: 3.317102156445311e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=86.2, avg_loss=83.2]
+Training loss: 0.8321132654324174
+100%|█| 2/2 [01:40<00:00, 50.38s/it, sdr_soprano=2.4, k_sdr_soprano=85.2, si_sdr
+Num overlap: 4
+Instr soprano si_sdr: -1.5980 (Std: 0.4379)
+Instr soprano l1_freq: 25.0212 (Std: 0.7724)
+Instr soprano sdr: 2.2536 (Std: 0.1431)
+Instr soprano k_sdr: 84.8808 (Std: 0.3546)
+Instr alto si_sdr: -16.6485 (Std: 2.1852)
+Instr alto l1_freq: 23.7841 (Std: 0.0871)
+Instr alto sdr: -1.7738 (Std: 0.0124)
+Instr alto k_sdr: 72.9849 (Std: 0.0441)
+Instr tenor si_sdr: -16.1647 (Std: 1.4774)
+Instr tenor l1_freq: 23.7679 (Std: 2.0833)
+Instr tenor sdr: -2.0833 (Std: 0.6177)
+Instr tenor k_sdr: 71.7853 (Std: 2.2790)
+Instr bass si_sdr: -21.8257 (Std: 1.1581)
+Instr bass l1_freq: 24.0677 (Std: 0.6811)
+Instr bass sdr: -3.7060 (Std: 0.6104)
+Instr bass k_sdr: 65.1511 (Std: 2.7552)
+Metric avg si_sdr     : -14.0592
+Metric avg l1_freq    : 24.1603
+Metric avg sdr        : -1.3274
+Metric avg k_sdr      : 73.7005
+Elapsed time: 100.81 sec
+Train epoch: 28 Learning rate: 3.151247048623045e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=77.9, avg_loss=76.4]
+Training loss: 0.763748973608017
+100%|█| 2/2 [01:40<00:00, 50.37s/it, sdr_soprano=2.26, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.9646 (Std: 0.4343)
+Instr soprano l1_freq: 24.8855 (Std: 0.8640)
+Instr soprano sdr: 2.1183 (Std: 0.1440)
+Instr soprano k_sdr: 84.5435 (Std: 0.3606)
+Instr alto si_sdr: -17.8830 (Std: 1.8794)
+Instr alto l1_freq: 23.7065 (Std: 0.0802)
+Instr alto sdr: -1.8454 (Std: 0.0107)
+Instr alto k_sdr: 72.7291 (Std: 0.0386)
+Instr tenor si_sdr: -16.2281 (Std: 1.6598)
+Instr tenor l1_freq: 23.8806 (Std: 1.9777)
+Instr tenor sdr: -2.0561 (Std: 0.6545)
+Instr tenor k_sdr: 71.8762 (Std: 2.4081)
+Instr bass si_sdr: -23.0272 (Std: 1.4897)
+Instr bass l1_freq: 24.1593 (Std: 0.8213)
+Instr bass sdr: -3.7035 (Std: 0.5634)
+Instr bass k_sdr: 65.1797 (Std: 2.5411)
+Metric avg si_sdr     : -14.7757
+Metric avg l1_freq    : 24.1580
+Metric avg sdr        : -1.3717
+Metric avg k_sdr      : 73.5821
+Elapsed time: 100.79 sec
+Train epoch: 29 Learning rate: 3.151247048623045e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=51.2, avg_loss=83.7]
+Training loss: 0.8374413635581732
+100%|█| 2/2 [01:40<00:00, 50.32s/it, sdr_soprano=2.36, k_sdr_soprano=85.1, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.7476 (Std: 0.4433)
+Instr soprano l1_freq: 24.9879 (Std: 0.8277)
+Instr soprano sdr: 2.2047 (Std: 0.1553)
+Instr soprano k_sdr: 84.7588 (Std: 0.3863)
+Instr alto si_sdr: -17.5192 (Std: 1.6281)
+Instr alto l1_freq: 23.6020 (Std: 0.0498)
+Instr alto sdr: -1.9332 (Std: 0.0524)
+Instr alto k_sdr: 72.4120 (Std: 0.1897)
+Instr tenor si_sdr: -16.2182 (Std: 1.2514)
+Instr tenor l1_freq: 23.7313 (Std: 2.0162)
+Instr tenor sdr: -2.1777 (Std: 0.6116)
+Instr tenor k_sdr: 71.4358 (Std: 2.2806)
+Instr bass si_sdr: -22.7212 (Std: 1.0703)
+Instr bass l1_freq: 23.9454 (Std: 0.7436)
+Instr bass sdr: -3.8544 (Std: 0.6271)
+Instr bass k_sdr: 64.4641 (Std: 2.8900)
+Metric avg si_sdr     : -14.5516
+Metric avg l1_freq    : 24.0666
+Metric avg sdr        : -1.4402
+Metric avg k_sdr      : 73.2677
+Elapsed time: 100.70 sec
+Train epoch: 30 Learning rate: 3.151247048623045e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=89.3, avg_loss=81.1]
+Training loss: 0.8106821343302727
+100%|█| 2/2 [01:40<00:00, 50.31s/it, sdr_soprano=2.22, k_sdr_soprano=84.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.9360 (Std: 0.3275)
+Instr soprano l1_freq: 24.7635 (Std: 0.7582)
+Instr soprano sdr: 2.1130 (Std: 0.1029)
+Instr soprano k_sdr: 84.5311 (Std: 0.2578)
+Instr alto si_sdr: -18.0974 (Std: 0.9002)
+Instr alto l1_freq: 23.7931 (Std: 0.0572)
+Instr alto sdr: -1.6897 (Std: 0.0087)
+Instr alto k_sdr: 73.2831 (Std: 0.0307)
+Instr tenor si_sdr: -16.2042 (Std: 1.3348)
+Instr tenor l1_freq: 24.0285 (Std: 1.9970)
+Instr tenor sdr: -1.8777 (Std: 0.6837)
+Instr tenor k_sdr: 72.5206 (Std: 2.4663)
+Instr bass si_sdr: -22.6557 (Std: 1.0800)
+Instr bass l1_freq: 24.4118 (Std: 0.9361)
+Instr bass sdr: -3.4156 (Std: 0.4275)
+Instr bass k_sdr: 66.4963 (Std: 1.8534)
+Metric avg si_sdr     : -14.7233
+Metric avg l1_freq    : 24.2492
+Metric avg sdr        : -1.2175
+Metric avg k_sdr      : 74.2078
+Elapsed time: 100.67 sec
+Train epoch: 31 Learning rate: 2.993684696191893e-05
+100%|█████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=83, avg_loss=79.1]
+Training loss: 0.7907988902181387
+100%|█| 2/2 [01:40<00:00, 50.32s/it, sdr_soprano=2.24, k_sdr_soprano=84.8, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.9411 (Std: 0.3310)
+Instr soprano l1_freq: 24.8733 (Std: 0.7413)
+Instr soprano sdr: 2.1284 (Std: 0.1100)
+Instr soprano k_sdr: 84.5696 (Std: 0.2752)
+Instr alto si_sdr: -19.2111 (Std: 1.2226)
+Instr alto l1_freq: 23.5431 (Std: 0.0208)
+Instr alto sdr: -2.0208 (Std: 0.1258)
+Instr alto k_sdr: 72.0904 (Std: 0.4603)
+Instr tenor si_sdr: -16.9561 (Std: 1.1633)
+Instr tenor l1_freq: 23.8242 (Std: 2.0685)
+Instr tenor sdr: -2.1996 (Std: 0.5603)
+Instr tenor k_sdr: 71.3666 (Std: 2.0940)
+Instr bass si_sdr: -23.1834 (Std: 0.9082)
+Instr bass l1_freq: 24.1649 (Std: 0.7639)
+Instr bass sdr: -3.8278 (Std: 0.6677)
+Instr bass k_sdr: 64.5706 (Std: 3.0669)
+Metric avg si_sdr     : -15.3229
+Metric avg l1_freq    : 24.1014
+Metric avg sdr        : -1.4799
+Metric avg k_sdr      : 73.1493
+Elapsed time: 100.69 sec
+Train epoch: 32 Learning rate: 2.993684696191893e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=39.9, avg_loss=79.1]
+Training loss: 0.7905131816864014
+100%|█| 2/2 [01:40<00:00, 50.43s/it, sdr_soprano=2.28, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -2.0100 (Std: 0.4559)
+Instr soprano l1_freq: 24.9753 (Std: 0.8953)
+Instr soprano sdr: 2.1144 (Std: 0.1643)
+Instr soprano k_sdr: 84.5331 (Std: 0.4116)
+Instr alto si_sdr: -18.9452 (Std: 1.2810)
+Instr alto l1_freq: 23.4593 (Std: 0.1072)
+Instr alto sdr: -1.9771 (Std: 0.0364)
+Instr alto k_sdr: 72.2528 (Std: 0.1326)
+Instr tenor si_sdr: -16.1412 (Std: 1.4642)
+Instr tenor l1_freq: 23.7401 (Std: 1.8293)
+Instr tenor sdr: -2.1322 (Std: 0.7629)
+Instr tenor k_sdr: 71.5619 (Std: 2.8326)
+Instr bass si_sdr: -22.8087 (Std: 1.2984)
+Instr bass l1_freq: 23.9835 (Std: 0.9516)
+Instr bass sdr: -3.7623 (Std: 0.4273)
+Instr bass k_sdr: 64.9547 (Std: 1.9412)
+Metric avg si_sdr     : -14.9763
+Metric avg l1_freq    : 24.0395
+Metric avg sdr        : -1.4393
+Metric avg k_sdr      : 73.3256
+Elapsed time: 100.91 sec
+Train epoch: 33 Learning rate: 2.993684696191893e-05
+100%|██████████████████| 100/100 [01:53<00:00,  1.14s/it, loss=136, avg_loss=83]
+Training loss: 0.8303847685456276
+100%|█| 2/2 [01:40<00:00, 50.30s/it, sdr_soprano=2.26, k_sdr_soprano=84.9, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.7634 (Std: 0.3267)
+Instr soprano l1_freq: 24.8044 (Std: 0.7517)
+Instr soprano sdr: 2.1535 (Std: 0.1024)
+Instr soprano k_sdr: 84.6325 (Std: 0.2556)
+Instr alto si_sdr: -18.7874 (Std: 1.2389)
+Instr alto l1_freq: 23.8671 (Std: 0.0764)
+Instr alto sdr: -1.6299 (Std: 0.0519)
+Instr alto k_sdr: 73.4930 (Std: 0.1821)
+Instr tenor si_sdr: -18.0845 (Std: 0.9284)
+Instr tenor l1_freq: 24.0291 (Std: 2.0648)
+Instr tenor sdr: -1.9199 (Std: 0.6401)
+Instr tenor k_sdr: 72.3789 (Std: 2.3194)
+Instr bass si_sdr: -23.0785 (Std: 1.0169)
+Instr bass l1_freq: 24.6860 (Std: 1.0257)
+Instr bass sdr: -3.2769 (Std: 0.3804)
+Instr bass k_sdr: 67.1040 (Std: 1.6190)
+Metric avg si_sdr     : -15.4285
+Metric avg l1_freq    : 24.3466
+Metric avg sdr        : -1.1683
+Metric avg k_sdr      : 74.4021
+Elapsed time: 100.66 sec
+Train epoch: 34 Learning rate: 2.844000461382298e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=66.6, avg_loss=81.7]
+Training loss: 0.8174289874732494
+100%|█| 2/2 [01:40<00:00, 50.37s/it, sdr_soprano=2.5, k_sdr_soprano=85.5, si_sdr
+Num overlap: 4
+Instr soprano si_sdr: -1.4060 (Std: 0.5504)
+Instr soprano l1_freq: 25.1361 (Std: 0.8950)
+Instr soprano sdr: 2.3130 (Std: 0.1910)
+Instr soprano k_sdr: 85.0260 (Std: 0.4712)
+Instr alto si_sdr: -17.6368 (Std: 1.7166)
+Instr alto l1_freq: 23.7703 (Std: 0.1501)
+Instr alto sdr: -1.7096 (Std: 0.0928)
+Instr alto k_sdr: 73.2112 (Std: 0.3282)
+Instr tenor si_sdr: -18.6472 (Std: 0.4760)
+Instr tenor l1_freq: 23.7096 (Std: 2.0273)
+Instr tenor sdr: -2.1408 (Std: 0.6390)
+Instr tenor k_sdr: 71.5660 (Std: 2.3734)
+Instr bass si_sdr: -22.6724 (Std: 0.9168)
+Instr bass l1_freq: 24.3157 (Std: 0.9884)
+Instr bass sdr: -3.5070 (Std: 0.4099)
+Instr bass k_sdr: 66.1015 (Std: 1.7988)
+Metric avg si_sdr     : -15.0906
+Metric avg l1_freq    : 24.2329
+Metric avg sdr        : -1.2611
+Metric avg k_sdr      : 73.9762
+Elapsed time: 100.80 sec
+Train epoch: 35 Learning rate: 2.844000461382298e-05
+100%|███████████████| 100/100 [01:54<00:00,  1.14s/it, loss=91.5, avg_loss=83.9]
+Training loss: 0.8391125183552504
+100%|█| 2/2 [01:40<00:00, 50.26s/it, sdr_soprano=2.54, k_sdr_soprano=85.6, si_sd
+Num overlap: 4
+Instr soprano si_sdr: -1.3657 (Std: 0.4521)
+Instr soprano l1_freq: 25.2972 (Std: 0.8928)
+Instr soprano sdr: 2.3652 (Std: 0.1705)
+Instr soprano k_sdr: 85.1552 (Std: 0.4189)
+Instr alto si_sdr: -18.5916 (Std: 1.2241)
+Instr alto l1_freq: 23.3732 (Std: 0.0499)
+Instr alto sdr: -2.1211 (Std: 0.0592)
+Instr alto k_sdr: 71.7241 (Std: 0.2190)
+Instr tenor si_sdr: -19.2889 (Std: 0.2914)
+Instr tenor l1_freq: 23.3573 (Std: 1.9923)
+Instr tenor sdr: -2.5338 (Std: 0.5823)
+Instr tenor k_sdr: 70.0835 (Std: 2.2627)
+Instr bass si_sdr: -23.1393 (Std: 0.6497)
+Instr bass l1_freq: 23.8941 (Std: 0.8994)
+Instr bass sdr: -4.0194 (Std: 0.6007)
+Instr bass k_sdr: 63.7018 (Std: 2.8334)
+Metric avg si_sdr     : -15.5964
+Metric avg l1_freq    : 23.9805
+Metric avg sdr        : -1.5773
+Metric avg k_sdr      : 72.6662
+Elapsed time: 100.58 sec
+Train epoch: 36 Learning rate: 2.844000461382298e-05
+100%|███████████████| 100/100 [01:53<00:00,  1.14s/it, loss=74.3, avg_loss=77.1]
+Training loss: 0.7711075471714139
+100%|█| 2/2 [01:40<00:00, 50.33s/it, sdr_soprano=2.5, k_sdr_soprano=85.5, si_sdr
+Num overlap: 4
+Instr soprano si_sdr: -1.4050 (Std: 0.3664)
+Instr soprano l1_freq: 25.2807 (Std: 0.8904)
+Instr soprano sdr: 2.3407 (Std: 0.1548)
+Instr soprano k_sdr: 85.0954 (Std: 0.3811)
+Instr alto si_sdr: -19.6845 (Std: 1.1457)
+Instr alto l1_freq: 23.4308 (Std: 0.2247)
+Instr alto sdr: -1.9878 (Std: 0.1859)
+Instr alto k_sdr: 72.2073 (Std: 0.6775)
+Instr tenor si_sdr: -20.4483 (Std: 0.3832)
+Instr tenor l1_freq: 23.4663 (Std: 1.7756)
+Instr tenor sdr: -2.4295 (Std: 0.8296)
+Instr tenor k_sdr: 70.4090 (Std: 3.1892)
+Instr bass si_sdr: -23.4702 (Std: 0.8277)
+Instr bass l1_freq: 24.1513 (Std: 1.2363)
+Instr bass sdr: -3.7210 (Std: 0.2075)
+Instr bass k_sdr: 65.1854 (Std: 0.9365)
+Metric avg si_sdr     : -16.2520
+Metric avg l1_freq    : 24.0823
+Metric avg sdr        : -1.4494
+Metric avg k_sdr      : 73.2243
+Elapsed time: 100.70 sec
+Train epoch: 37 Learning rate: 2.7018004383131832e-05
+ 65%|███████████      | 65/100 [01:18<00:34,  1.00it/s, loss=115, avg_loss=78.6]^C

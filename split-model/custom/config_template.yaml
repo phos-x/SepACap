@@ -1,0 +1,42 @@
+ssl_encoder:
+  enabled: true
+  name: SSLChoralEncoder
+  params:
+    model_name: "facebook/wav2vec2-base-960h"
+    trainable: false
+
+critic:
+  enabled: true
+  name: PatchGANDiscriminator
+  params:
+    in_channels: 2        # mixture + stem
+    base_channels: 64
+    num_layers: 4
+    spectral_norm: true
+
+agent:
+  enabled: true
+  name: LLMAgent
+  params:
+    provider: "openai"          # or "local", "ollama", "azure", etc.
+    model: "gpt-4o-mini"        # or your local model
+    temperature: 0.2
+    max_tokens: 256
+    interval: 3                 # call agent every N epochs
+    action_whitelist:
+      - reduce_lr
+      - increase_lr
+      - freeze_critic
+      - unfreeze_critic
+      - run_data_check
+      - continue
+
+# Optional: Control the cross attention behavior explicitly
+cross_attn_heads: 8
+cross_attn_dropout: 0.1
+
+ssl_encoder:
+  enabled: true
+  context_dim: 768  # Optional fallback if you ever use a non-HuggingFace model
+  name: SSLChoralEncoder
+  # ... rest of your config ...
