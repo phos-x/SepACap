@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from custom.embedding.factory import build_ssl_encoder
+from custom.encoder.factory import build_ssl_encoder
 from models.bs_roformer.bs_roformer import BSRoformer
 
 logger = logging.getLogger(__name__)
