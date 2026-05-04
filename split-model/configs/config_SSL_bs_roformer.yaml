@@ -155,7 +155,7 @@ training:
   lr: 5.0e-05
   patience: 2
   reduce_factor: 0.95
-  target_instrument: soprano # Can be set to null/None if training all stems simultaneously
+  #target_instrument: soprano # Can be set to null/None if training all stems simultaneously
   num_epochs: 1000
   num_steps: 1000
   q: 0.95
@@ -163,7 +163,7 @@ training:
   ema_momentum: 0.999
   optimizer: adam
   other_fix: false 
-  use_amp: true 
+  use_amp: false 
 
 augmentations:
   enable: true 
