@@ -92,10 +92,9 @@ class SSLChoralEncoder(nn.Module):
 
         # 2. Device-Aware Resampling
         if self.resample is not None:
-            # Ensure the resampler's internal filter bank is on the same device as the waveform
-            if self.resample.resample.kernel.device != mono_waveform.device:
-                self.resample = self.resample.to(mono_waveform.device)
-            
+            # Safely move the resampler to the waveform's device. 
+            # PyTorch ignores this if it's already on the correct device.
+            self.resample = self.resample.to(mono_waveform.device)
             mono_waveform = self.resample(mono_waveform)
 
         # 3. Extract Embeddings
