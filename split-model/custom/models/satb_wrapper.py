@@ -35,7 +35,7 @@ class SSLCrossAttention(nn.Module):
         )
         
         # ZERO-INIT: Acts as an Identity function at step 0 to protect pre-trained weights.
-        nn.init.zeros_(self.mha.out_proj.weight)
+        nn.init.normal_(self.mha.out_proj.weight, mean=0.0, std=1e-6)
         if self.mha.out_proj.bias is not None:
             nn.init.zeros_(self.mha.out_proj.bias)
 

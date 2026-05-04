@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from .base import AgentBase
+#from .base import AgentBase
 from .providers.base import LLMProviderInterface
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class LLMAgentConfig:
     ])
 
 
-class LLMAgent(AgentBase):
+class LLMAgent():
     """
     Decoupled Meta-Controller. 
     Relies on Dependency Injection for its LLM Provider.

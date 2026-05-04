@@ -29,6 +29,7 @@ import warnings
 try:
     from custom.agent.agent_factory import build_agent
 except ImportError:
+    print(f"Custom agent factory not found. Proceeding without LLM agent. Error: {sys.exc_info()[0]}")
     build_agent = None
 
 warnings.filterwarnings("ignore")
