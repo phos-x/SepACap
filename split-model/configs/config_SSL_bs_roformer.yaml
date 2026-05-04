@@ -25,10 +25,16 @@ agent:
     api_key_env_var: "GROQ_API_KEY"     # Points to the env var we just set
     interval: 3                         # Agent runs every 3 epochs
     temperature: 0.1                    # Low temp = deterministic, reliable JSON
-    action_whitelist:
-      - reduce_lr
-      - increase_lr
-      - continue
+    # action_whitelist:
+    #   - reduce_lr
+    #   - increase_lr
+    #   - boost_bass_loss
+    #   - boost_tenor_loss
+    #   - boost_alto_loss
+    #   - boost_soprano_loss
+    #   - enable_hard_aug
+    #   - unfreeze_ssl
+    #   - continue
 
 audio:
   chunk_size: 131584

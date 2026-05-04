@@ -446,24 +446,43 @@ def train_model(args: Union[argparse.Namespace, None], rank=None, world_size=Non
 
         # --- CUSTOM LLM AGENT HOOK ---
         # The agent acts as a Meta-Controller: analyzing logs and suggesting actions.
-        if agent is not None and getattr(agent._cfg, 'enabled', True) and (epoch % agent._cfg.interval == 0):
-            actions_list = [[]]
+        interval = agent._cfg.interval if hasattr(agent, '_cfg') else 3 
+        
+        if agent is not None and (epoch % interval == 0):
+            import math
+            is_nan = math.isnan(train_loss) or math.isnan(metric_avg)
             
-            # Rank 0 handles the actual API request to prevent hitting rate limits
+            snapshot = {
+                "epoch": epoch,
+                "train_loss": float(train_loss) if not is_nan else "NaN",
+                "val_metric_avg": float(metric_avg) if not is_nan else "NaN",
+                "stem_metrics": {stem: np.mean(vals) for stem, vals in all_metrics['sdr'].items()} if all_metrics else {},
+                "current_lr": optimizer.param_groups[0]['lr'],
+                "SYSTEM_HEALTH": "CRITICAL NaN" if is_nan else "Nominal",
+            }
+            
+            # NATIVE INJECTION: Pass the PyTorch objects directly to the AI's hands
+            live_context = {
+                "optimizer": optimizer,
+                "multi_loss": multi_loss,
+                "model": model
+            }
+            
             if should_print:
-                snapshot = {
-                    "epoch": epoch,
-                    "train_loss": float(train_loss),
-                    "val_metric": float(metric_avg),
-                    "current_lr": optimizer.param_groups[0]['lr'],
-                }
+                print("\n🧠 Invoking Autonomous Orchestrator...")
                 
-                agent_response = agent.analyze(snapshot)
-                actions_list[0] = agent_response.get("actions", [])
+            agent_response = agent.analyze(snapshot, live_context)
+            
+            if should_print:
+                print(f"🤖 REASONING: {agent_response.get('reasoning')}")
+                print(f"🤖 ACTIONS: {agent_response.get('actions_taken')}\n")
                 
-                issues = agent_response.get("issues", [])
-                if issues and issues != ["none"]:
-                    print(f"🤖 LLM Agent flagged issues: {issues}")
+                # Log to W&B
+                if wandb.run is not None:
+                    wandb.log({
+                        "agent/reasoning": wandb.Html(f"<p>{agent_response.get('reasoning')}</p>"), 
+                        "agent/actions_taken": str(agent_response.get('actions_taken'))
+                    })
 
             # Sync actions across all GPUs to prevent DDP desync
             if ddp:
