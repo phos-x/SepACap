@@ -24,7 +24,7 @@ from valid import valid_multi_gpu, valid
 
 import warnings
 
-# Try to import the custom agent factory gracefully
+# Gracefully import the Hive Mind factory
 try:
     from custom.agent.agent_factory import build_agent
 except ImportError:
@@ -427,33 +427,38 @@ def train_model(args: Union[argparse.Namespace, None], rank=None, world_size=Non
                 all_time_all_metrics=all_time_all_metrics, all_losses=all_losses,
             )
 
-        # --- LEVEL 4.5 AUTONOMOUS ORCHESTRATOR HOOK ---
-        # Get the interval from the config, safely defaulting to 3
+        # --- LEVEL 6 AUTONOMOUS HIVE MIND HOOK ---
         agent_interval = config.get('agent', {}).get('params', {}).get('interval', 3) if isinstance(config.get('agent'), dict) else 3
         
         if agent is not None and (epoch % agent_interval == 0):
             import math
             import numpy as np
+            from custom.agent.telemetry import extract_system_telemetry
+            
             is_nan = math.isnan(train_loss) or math.isnan(metric_avg)
             
-            # FOOLPROOF METRIC EXTRACTION
-            # We grab the metrics for this exact epoch from the global dictionary
-            # This completely bypasses the UnboundLocalError
             epoch_metrics = all_time_all_metrics.get(f"epoch_{epoch}", {})
             sdr_dict = {}
             if 'sdr' in epoch_metrics:
                 sdr_dict = {stem: float(np.mean(vals)) for stem, vals in epoch_metrics['sdr'].items()}
             
+            # THE NEUROLOGICAL MRI
+            internal_telemetry = extract_system_telemetry(model, optimizer)
+            
             snapshot = {
                 "epoch": epoch,
-                "train_loss": float(train_loss) if not is_nan else "NaN",
-                "val_metric_avg": float(metric_avg) if not is_nan else "NaN",
+                "global_metrics": {
+                    "train_loss": float(train_loss) if not is_nan else "NaN",
+                    "val_metric_avg": float(metric_avg) if not is_nan else "NaN",
+                },
                 "stem_metrics": sdr_dict,
-                "current_lr": optimizer.param_groups[0]['lr'],
-                "SYSTEM_HEALTH": "CRITICAL NaN" if is_nan else "Nominal",
+                "optimizer_state": {
+                    "current_lr": optimizer.param_groups[0]['lr'],
+                },
+                "INTERNAL_TELEMETRY": internal_telemetry,
+                "SYSTEM_HEALTH": "CRITICAL NaN" if is_nan else internal_telemetry.get("health_status", "Nominal")
             }
             
-            # Context injection for the tools
             live_context = {
                 "optimizer": optimizer,
                 "multi_loss": multi_loss,
@@ -462,17 +467,25 @@ def train_model(args: Union[argparse.Namespace, None], rank=None, world_size=Non
             
             # The LLM only needs to think on the master process
             if should_print:
-                print("\n🧠 Invoking Autonomous Orchestrator...")
+                print(f"\n🧠 Invoking Hive Mind Council | System Health: {snapshot['SYSTEM_HEALTH']}")
                 
-                # The Orchestrator analyzes the snapshot and physically executes the tools inside this call
+                # The Orchestrator analyzes the snapshot and physically executes the tools
                 agent_response = agent.analyze(snapshot, live_context)
                 
-                print(f"🤖 REASONING: {agent_response.get('reasoning')}")
+                debate = agent_response.get('debate', {})
+                if debate:
+                    print(f"🔥 ACCELERATOR OPINION: {debate.get('accelerator', 'None')}")
+                    print(f"🛡️ STABILIZER OPINION: {debate.get('stabilizer', 'None')}")
+                    
+                print(f"⚖️ CHIEF SCIENTIST REASONING: {agent_response.get('reasoning')}")
                 print(f"🤖 ACTIONS TAKEN: {agent_response.get('actions_taken')}\n")
                 
                 if wandb.run is not None:
                     wandb.log({
-                        "agent/reasoning": wandb.Html(f"<p>{agent_response.get('reasoning')}</p>"), 
+                        "agent/health": snapshot["SYSTEM_HEALTH"],
+                        "agent/accelerator_opinion": wandb.Html(f"<p>{debate.get('accelerator', '')}</p>") if debate else "",
+                        "agent/stabilizer_opinion": wandb.Html(f"<p>{debate.get('stabilizer', '')}</p>") if debate else "",
+                        "agent/chief_reasoning": wandb.Html(f"<p>{agent_response.get('reasoning')}</p>"), 
                         "agent/actions_taken": str(agent_response.get('actions_taken'))
                     })
 

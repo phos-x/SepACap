@@ -8,7 +8,7 @@ from .memory.json_ledger import JSONLedger
 from .tools.registry import registry
 
 # IMPORTANT: We must import the tool files here so the @registry.register decorators fire and load the tools
-from .tools import lr_tools, loss_tools 
+from .tools import lr_tools, loss_tools, freeze
 
 logger = logging.getLogger(__name__)
 

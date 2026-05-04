@@ -17,24 +17,32 @@ ssl_encoder:
 # --- NEW: LLM META-CONTROLLER CONFIGURATION ---
 agent:
   enabled: true
-  name: LLMAgent
   params:
-    provider_type: "openai_compat"
+    interval: 1
+    api_key_env_var: "GROQ_API_KEY"
     base_url: "https://api.groq.com/openai/v1"
-    model_name: "llama-3.3-70b-versatile"  # Extremely fast, highly accurate at JSON
-    api_key_env_var: "GROQ_API_KEY"     # Points to the env var we just set
-    interval: 3                         # Agent runs every 3 epochs
-    temperature: 0.1                    # Low temp = deterministic, reliable JSON
-    # action_whitelist:
-    #   - reduce_lr
-    #   - increase_lr
-    #   - boost_bass_loss
-    #   - boost_tenor_loss
-    #   - boost_alto_loss
-    #   - boost_soprano_loss
-    #   - enable_hard_aug
-    #   - unfreeze_ssl
-    #   - continue
+    max_workers: 2
+    brains:
+      accelerator:
+        model: "llama-3.1-8b-instant"
+        temperature: 0.8
+        system_prompt: >
+          You are the ACCELERATOR expert. Analyze this PyTorch training snapshot. 
+          Your ONLY goal is to maximize the SDR score. Suggest aggressive tactics: unfreezing layers, 
+          boosting learning rates, or forcing convergence. Keep it under 3 sentences.
+      stabilizer:
+        model: "llama-3.1-8b-instant"
+        temperature: 0.1
+        system_prompt: >
+          You are the STABILIZER expert. accurately Analyze this PyTorch training snapshot. 
+          Your ONLY goal is to prevent NaN crashes and stop overfitting. Look closely at gradient norms. 
+          Suggest defensive tactics: freezing layers or reducing learning rates. Keep it under 3 sentences.
+      chief:
+        model: "llama-3.3-70b-versatile"  # Using a heavier model for the final judgment
+        temperature: 0.1
+        system_prompt: >
+          You are the CHIEF SCIENTIST. You must read the internal telemetry, the Accelerator's proposal, 
+          and the Stabilizer's proposal. accurately, iterativelyand efficiently Weigh the risks and rewards. You hold the final execution keys.
 
 audio:
   chunk_size: 131584
