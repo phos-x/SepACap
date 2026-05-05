@@ -43,6 +43,14 @@ class DNALedger:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         
+        # --- THE FIX: Convert ml_collections.ConfigDict to a standard dict ---
+        if hasattr(config, 'to_dict'):
+            safe_config = config.to_dict()
+        else:
+            # Fallback for standard dicts
+            safe_config = dict(config)
+        # ---------------------------------------------------------------------
+
         # 2. Construct the Genesis Block
         genesis = {
             "block_type": "GENESIS",
@@ -52,7 +60,7 @@ class DNALedger:
                 "cuda_device": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU",
                 "master_seed": seed
             },
-            "base_config": config
+            "base_config": safe_config
         }
         
         # Write mode 'w' creates/overwrites the file
