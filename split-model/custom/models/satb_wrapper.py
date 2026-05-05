@@ -8,6 +8,13 @@ from torch import Tensor
 from custom.encoder.factory import build_ssl_encoder
 from models.bs_roformer.bs_roformer import BSRoformer
 
+# --- ASYNCHRONOUS PANOPTICON IMPORT ---
+try:
+    from custom.agent.blackboard import global_blackboard
+except ImportError:
+    global_blackboard = None
+# --------------------------------------
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +70,7 @@ class SSLCrossAttention(nn.Module):
 
 class SATBSeparatorWrapper(nn.Module):
     """
-    A fully portable, config-driven 'Troakes Horse' Wrapper.
+    A fully portable, config-driven 'Trojan Horse' Wrapper.
     """
 
     def __init__(self, cfg: Dict[str, Any]) -> None:
@@ -147,5 +154,12 @@ class SATBSeparatorWrapper(nn.Module):
             target=target,
             **kwargs
         )
+        
+        # --- THE MICRO-INTERRUPT KILL SWITCH ---
+        # Checks the C-level boolean from shared memory. Safely bypasses if Blackboard isn't loaded.
+        if global_blackboard is not None and global_blackboard.panic.value:
+            global_blackboard.panic.value = False
+            raise RuntimeError("AI_PREEMPTIVE_ABORT")
+        # ---------------------------------------
         
         return out

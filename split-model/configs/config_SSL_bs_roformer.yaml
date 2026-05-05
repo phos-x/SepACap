@@ -14,35 +14,16 @@ ssl_encoder:
     input_sr: 44100
     target_sr: 16000
 
-# --- NEW: LLM META-CONTROLLER CONFIGURATION ---
 agent:
   enabled: true
-  params:
-    interval: 1
-    api_key_env_var: "GROQ_API_KEY"
-    base_url: "https://api.groq.com/openai/v1"
-    max_workers: 2
-    brains:
-      accelerator:
-        model: "llama-3.1-8b-instant"
-        temperature: 0.8
-        system_prompt: >
-          You are the ACCELERATOR expert. Analyze this PyTorch training snapshot. 
-          Your ONLY goal is to maximize the SDR score. Suggest aggressive tactics: unfreezing layers, 
-          boosting learning rates, or forcing convergence. Keep it under 3 sentences.
-      stabilizer:
-        model: "llama-3.1-8b-instant"
-        temperature: 0.1
-        system_prompt: >
-          You are the STABILIZER expert. accurately Analyze this PyTorch training snapshot. 
-          Your ONLY goal is to prevent NaN crashes and stop overfitting. Look closely at gradient norms. 
-          Suggest defensive tactics: freezing layers or reducing learning rates. Keep it under 3 sentences.
-      chief:
-        model: "llama-3.3-70b-versatile"  # Using a heavier model for the final judgment
-        temperature: 0.1
-        system_prompt: >
-          You are the CHIEF SCIENTIST. You must read the internal telemetry, the Accelerator's proposal, 
-          and the Stabilizer's proposal. accurately, iterativelyand efficiently Weigh the risks and rewards. You hold the final execution keys.
+  vram_panic_threshold: 92.0 
+  stabilizer_poll_interval: 2.0
+  accelerator_poll_interval: 10.0
+  model: "llama3-70b-8192"
+  provider: "groq"
+  temperature: 0.1
+  max_tokens: 1024
+
 
 audio:
   chunk_size: 131584
@@ -151,9 +132,9 @@ model:
 
 training:
   model_type: satb_wrapper # Tells ZFTurbo to load our custom wrapper
-  batch_size: 10
-  gradient_accumulation_steps: 1
-  grad_clip: 0
+  batch_size: 5
+  gradient_accumulation_steps: 2
+  grad_clip: 1.0
   # --- UPDATED: Aligned to SATB Domain ---
   instruments:
   - soprano
@@ -174,7 +155,7 @@ training:
   use_amp: false 
 
 augmentations:
-  enable: true 
+  enable: false 
   loudness: true 
   loudness_min: 0.5
   loudness_max: 1.5

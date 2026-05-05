@@ -1,13 +1,24 @@
+import logging
 from typing import Any, Dict, Optional
-from .hive_mind import HiveMindOrchestrator
 
-def build_agent(cfg: Dict[str, Any]) -> Optional[HiveMindOrchestrator]:
+logger = logging.getLogger(__name__)
+
+def build_agent(cfg: Dict[str, Any]) -> Optional[Any]:
     """
-    Builds and returns the Hive Mind Orchestrator if enabled in the config.
-    Strictly config-driven: passes the entire parameters block to the engine.
+    Builds and returns the LLM Engine for the Asynchronous Panopticon.
+    This engine is passed to the DaemonManager to evaluate threshold anomalies via Groq.
     """
     if not cfg.get("enabled", False):
+        logger.info("⬛ Asynchronous Panopticon is disabled in config.")
         return None
     
-    # Pass the entire params block directly. Zero hardcoding.
-    return HiveMindOrchestrator(cfg=cfg.get("params", {}))
+    try:
+        # We import locally to prevent crashes if Groq isn't installed
+        from .llm_engine import PanopticonEngine 
+        
+        logger.info(f"🧠 Booting Panopticon LLM Engine: {cfg.get('model', 'llama3-70b-8192')}")
+        return PanopticonEngine(cfg)
+        
+    except ImportError as e:
+        logger.error(f"Failed to import PanopticonEngine. Is Groq installed? Error: {e}")
+        return None
