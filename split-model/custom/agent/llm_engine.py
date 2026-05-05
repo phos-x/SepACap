@@ -87,7 +87,7 @@ class PanopticonEngine:
         """
         return self._call_llm_json(system_prompt, payload)
     
-def analyze(self, snapshot: dict, live_context: dict = None) -> dict:
+    def analyze(self, snapshot: dict, live_context: dict = None) -> dict:
         """
         Invoked by the Orchestrator (train.py) at the end of an epoch.
         This is Brain C: The Chief Scientist.
