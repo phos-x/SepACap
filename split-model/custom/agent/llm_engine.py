@@ -17,7 +17,7 @@ class PanopticonEngine:
         except ImportError:
             raise ImportError("Please `pip install groq` to use the Panopticon Engine.")
             
-        self.model = config.get("model", "llama3-70b-8192")
+        self.model = config.get("model", "llama-3.3-70b-versatile")
         self.temperature = config.get("temperature", 0.1) # Ruthless logic, zero creativity
         self.max_tokens = config.get("max_tokens", 512)
 

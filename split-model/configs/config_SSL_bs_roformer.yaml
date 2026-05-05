@@ -19,7 +19,7 @@ agent:
   vram_panic_threshold: 92.0 
   stabilizer_poll_interval: 2.0
   accelerator_poll_interval: 10.0
-  model: "llama3-70b-8192"
+  model: "llama-3.3-70b-versatile"
   provider: "groq"
   temperature: 0.1
   max_tokens: 1024

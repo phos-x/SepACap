@@ -16,7 +16,7 @@ def build_agent(cfg: Dict[str, Any]) -> Optional[Any]:
         # We import locally to prevent crashes if Groq isn't installed
         from .llm_engine import PanopticonEngine 
         
-        logger.info(f"🧠 Booting Panopticon LLM Engine: {cfg.get('model', 'llama3-70b-8192')}")
+        logger.info(f"🧠 Booting Panopticon LLM Engine: {cfg.get('model', 'llama-3.3-70b-versatile')}")
         return PanopticonEngine(cfg)
         
     except ImportError as e:
