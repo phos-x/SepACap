@@ -52,7 +52,8 @@ def normalize_audio(audio: np.ndarray) -> Tuple[np.ndarray, Dict[str, float]]:
     Normalize an audio signal using mean and standard deviation.
 
     Computes the mean and standard deviation from the mono mix of the input
-    signal, then applies normalization to each channel.
+    signal, then applies normalization to each channel. Includes epsilon
+    protection to avoid division-by-zero when the audio (or a stem) is silent.
 
     Args:
         audio (np.ndarray): Input audio array of shape (channels, time) or (time,).
@@ -63,9 +64,22 @@ def normalize_audio(audio: np.ndarray) -> Tuple[np.ndarray, Dict[str, float]]:
             - A dictionary with keys "mean" and "std" from the original audio.
     """
 
+    # Ensure shape is (channels, time)
+    if audio.ndim == 1:
+        audio = audio[None, :]
+
     mono = audio.mean(0)
-    mean, std = mono.mean(), mono.std()
-    return (audio - mean) / std, {"mean": mean, "std": std}
+    mean = mono.mean()
+    std = mono.std()
+
+    # Math shield: prevent division by zero
+    eps = 1e-7
+    safe_std = std if std > eps else eps
+
+    normalized = (audio - mean) / safe_std
+
+    return normalized, {"mean": float(mean), "std": float(std)}
+
 
 
 def denormalize_audio(audio: np.ndarray, norm_params: Dict[str, float]) -> np.ndarray:

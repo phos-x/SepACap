@@ -1,7 +1,6 @@
 # coding: utf-8
 __author__ = 'Roman Solovyev (ZFTurbo): https://github.com/ZFTurbo/'
 
-
 import os
 import random
 import numpy as np
@@ -46,7 +45,7 @@ def prepare_data(config: Union[ConfigDict, OmegaConf], args: argparse.Namespace,
         world_size = dist.get_world_size()
 
         if args.dataset_type != 5:
-            ddp_batch = batch_size * world_size # maintain "num_steps" semantics across the whole world
+            ddp_batch = batch_size * world_size  # maintain "num_steps" semantics across the whole world
         else:
             ddp_batch = batch_size
 
@@ -97,12 +96,12 @@ def prepare_data(config: Union[ConfigDict, OmegaConf], args: argparse.Namespace,
     return train_loader
 
 
-def load_chunk(path, length, chunk_size, offset=None, target_channels = 2):
+def load_chunk(path, length, chunk_size, offset=None, target_channels=2):
     """
     Returns array with shape (target_channels, chunk_size)
     """
 
-    if  chunk_size <= length:
+    if chunk_size <= length:
         if offset is None:
             start = np.random.randint(length - chunk_size + 1)
         else:
@@ -124,7 +123,6 @@ def load_chunk(path, length, chunk_size, offset=None, target_channels = 2):
         x = np.concatenate([x, pad], axis=0)
     elif x.shape[0] > chunk_size:
         x = x[:chunk_size]
-
 
     ch = x.shape[1]
     if ch == target_channels:
@@ -171,28 +169,38 @@ def get_track_length(params):
 
 
 def process_chunk_worker(args):
+    """
+    SATB-aware worker: accept chunk if at least one stem is loud enough.
+    Reject only if all stems are below min_mean_abs or errors occur.
+    """
     task, instruments, file_types, min_mean_abs, default_chunk_size = args
     track_path, track_length, offset, chunk_size = task
 
     try:
+        active_stem_found = False
+
         for instrument in instruments:
-            instrument_loud_enough = False
             for extension in file_types:
                 path_to_audio_file = track_path + '/{}.{}'.format(instrument, extension)
                 if os.path.isfile(path_to_audio_file):
                     try:
-                        source = load_chunk(path_to_audio_file, length=track_length, offset=offset,
-                                            chunk_size=chunk_size)
+                        source = load_chunk(
+                            path_to_audio_file,
+                            length=track_length,
+                            offset=offset,
+                            chunk_size=chunk_size
+                        )
                         if np.abs(source).mean() >= min_mean_abs:
-                            instrument_loud_enough = True
+                            active_stem_found = True
                             break
-                    except Exception as e:
+                    except Exception:
                         return (track_path, offset, False)
 
-            if not instrument_loud_enough:
-                return (track_path, offset, False)
+            if active_stem_found:
+                return (track_path, offset, True)
 
-        return (track_path, offset, True)
+        # No active stems found
+        return (track_path, offset, False)
 
     except Exception:
         return (track_path, offset, False)
@@ -244,14 +252,14 @@ class MSSDataset(torch.utils.data.Dataset):
         self.do_chunks = config.training.get('precompute_chunks', False) and float(self.min_mean_abs) > 0
         # For dataset_type 5 - precompute all chunks
         if self.dataset_type == 5 or (self.dataset_type == 4 or self.dataset_type == 6) and self.do_chunks:
-             self._initialize_chunks_metadata()
+            self._initialize_chunks_metadata()
         if self.dataset_type == 7:
             self._build_class_to_tracks()
+
     def __len__(self):
         if self.dataset_type == 5:
             return len(self.chunks_metadata)
         return self.config.training.num_steps * self.batch_size
-
 
     def __getitem__(self, index):
         if self.dataset_type == 7:
@@ -282,7 +290,7 @@ class MSSDataset(torch.utils.data.Dataset):
                     )
                     loud_values = torch.tensor(loud_values, dtype=torch.float32)
                     res *= loud_values[:, None, None]
-        if self.dataset_type != 6 and self.dataset_type!=7:
+        if self.dataset_type != 6 and self.dataset_type != 7:
             mix = res.sum(0)
 
         if self.aug:
@@ -304,13 +312,12 @@ class MSSDataset(torch.utils.data.Dataset):
         # If we need to optimize only given stem
         if self.config.training.target_instrument is not None:
             index = self.config.training.instruments.index(self.config.training.target_instrument)
-            return res[index:index+1], mix
+            return res[index:index + 1], mix
 
-        if self.dataset_type==7:
+        if self.dataset_type == 7:
             return res, mix, active_stem_ids
 
         return res, mix
-
 
     def _build_class_to_tracks(self):
         import json
@@ -329,8 +336,8 @@ class MSSDataset(torch.utils.data.Dataset):
                 cache = json.load(f)
 
             if (
-                    cache.get("total_tracks") == total_tracks and
-                    cache.get("max_ratio") == max_ratio
+                cache.get("total_tracks") == total_tracks and
+                cache.get("max_ratio") == max_ratio
             ):
                 self.class_to_tracks = cache["class_to_tracks"]
                 self.available_classes = list(self.class_to_tracks.keys())
@@ -490,7 +497,6 @@ class MSSDataset(torch.utils.data.Dataset):
             active_stem_ids
         )
 
-
     def _initialize_chunks_metadata(self):
         should_print = (not dist.is_initialized() or dist.get_rank() == 0)
         chunks_cache_path = self.metadata_path.replace('.pkl', '_chunks.pkl')
@@ -504,9 +510,9 @@ class MSSDataset(torch.utils.data.Dataset):
                 cached_chunks = pickle.load(open(chunks_cache_path, 'rb'))
                 cached_config = cached_chunks.get('config', {})
                 config_matches = (
-                        cached_config.get('chunk_size') == current_config['chunk_size'] and
-                        cached_config.get('min_mean_abs') == current_config['min_mean_abs'] and
-                        cached_config.get('instruments') == current_config['instruments']
+                    cached_config.get('chunk_size') == current_config['chunk_size'] and
+                    cached_config.get('min_mean_abs') == current_config['min_mean_abs'] and
+                    cached_config.get('instruments') == current_config['instruments']
                 )
                 if config_matches:
                     self.chunks_metadata = cached_chunks['chunks_metadata']
@@ -531,7 +537,6 @@ class MSSDataset(torch.utils.data.Dataset):
         if self.verbose and should_print:
             print(f'Precomputed {len(self.chunks_metadata)} chunks')
 
-
     def _precompute_and_cache_chunks(self, cache_path, config):
         """Precompute all chunks and save to cache with config"""
         if self.dataset_type == 4 or self.dataset_type == 6:
@@ -547,7 +552,6 @@ class MSSDataset(torch.utils.data.Dataset):
         pickle.dump(cache_data, open(cache_path, 'wb'))
 
         return chunks_metadata
-
 
     def _precompute_chunks(self):
         """Precompute all chunks for dataset_type 5 with overlap 2 using multiprocessing"""
@@ -582,7 +586,10 @@ class MSSDataset(torch.utils.data.Dataset):
         """Precompute exact number of good chunks"""
         should_print = (not dist.is_initialized() or dist.get_rank() == 0)
 
-        target_count = self.config.training.get('num_precompute_chunks', self.config.training.num_steps * self.batch_size * self.config.training.num_epochs)
+        target_count = self.config.training.get(
+            'num_precompute_chunks',
+            self.config.training.num_steps * self.batch_size * self.config.training.num_epochs
+        )
         chunks_metadata = []
 
         if should_print:
@@ -607,12 +614,11 @@ class MSSDataset(torch.utils.data.Dataset):
                     good_chunks = self._process_tasks_sequential(tasks, False)
 
                 chunks_metadata.extend(good_chunks)
-                pbar.update(min(len(good_chunks),need))
+                pbar.update(min(len(good_chunks), need))
 
         chunks_metadata = chunks_metadata[:target_count]
 
         return chunks_metadata
-
 
     def _process_tasks_sequential(self, tasks, should_print):
         chunks_metadata = []
@@ -625,14 +631,13 @@ class MSSDataset(torch.utils.data.Dataset):
 
         return chunks_metadata
 
-
     def _process_tasks_parallel(self, tasks, should_print):
         chunks_metadata = []
 
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
 
-            worker_args = [(task, self.instruments, self.file_types, self.min_mean_abs, self.chunk_size) for task in
-                           tasks]
+            worker_args = [(task, self.instruments, self.file_types, self.min_mean_abs, self.chunk_size)
+                           for task in tasks]
 
             results = []
             if should_print:
@@ -651,36 +656,44 @@ class MSSDataset(torch.utils.data.Dataset):
 
         return chunks_metadata
 
-
     def _is_chunk_loud_enough(self, track_path, offset, chunk_size, track_length):
-
+        """
+        SATB-aware loudness check:
+        Accept chunk if at least one stem has meaningful energy.
+        Reject only if all stems are below min_mean_abs.
+        """
         try:
+            active_stem_found = False
+
             for instrument in self.instruments:
-                instrument_loud_enough = False
                 for extension in self.file_types:
                     path_to_audio_file = track_path + '/{}.{}'.format(instrument, extension)
                     if os.path.isfile(path_to_audio_file):
                         try:
-                            source = load_chunk(path_to_audio_file, length=track_length, offset=offset,
-                                                chunk_size=chunk_size)
+                            source = load_chunk(
+                                path_to_audio_file,
+                                length=track_length,
+                                offset=offset,
+                                chunk_size=chunk_size
+                            )
                             if np.abs(source).mean() >= self.min_mean_abs:
-                                instrument_loud_enough = True
+                                active_stem_found = True
                                 break
                         except Exception as e:
                             if not dist.is_initialized() or dist.get_rank() == 0:
                                 print('Error loading: {} Path: {}'.format(e, path_to_audio_file))
                             return False
 
-                if not instrument_loud_enough:
-                    return False
+                if active_stem_found:
+                    return True
 
-            return True
+            # If we reach here, all stems were silent
+            return False
 
         except Exception as e:
             if not dist.is_initialized() or dist.get_rank() == 0:
                 print('Error checking chunk loudness: {} Path: {}'.format(e, track_path))
             return False
-
 
     def read_from_metadata_cache(self, track_paths, instr=None):
         should_print = (not dist.is_initialized() or dist.get_rank() == 0)
@@ -705,7 +718,6 @@ class MSSDataset(torch.utils.data.Dataset):
         if len(metadata) > 0 and should_print:
             print('Old metadata was used for {} tracks.'.format(len(metadata)))
         return track_paths, metadata
-
 
     def get_metadata(self):
         read_metadata_procs = multiprocessing.cpu_count() - 2
@@ -737,7 +749,9 @@ class MSSDataset(torch.utils.data.Dataset):
             if read_metadata_procs <= 1:
                 pbar = tqdm(track_paths) if should_print else track_paths
                 for path in pbar:
-                    track_path, track_length = get_track_set_length((path, self.instruments, self.file_types, self.dataset_type))
+                    track_path, track_length = get_track_set_length(
+                        (path, self.instruments, self.file_types, self.dataset_type)
+                    )
                     metadata.append((track_path, track_length))
             else:
                 with ThreadPoolExecutor(max_workers=read_metadata_procs) as executor:
@@ -821,7 +835,6 @@ class MSSDataset(torch.utils.data.Dataset):
                                 print('Cant find track: {}'.format(path))
                             skipped += 1
                             continue
-                        # print(path)
                         try:
                             length = sf.info(path).frames
                         except:
@@ -840,7 +853,6 @@ class MSSDataset(torch.utils.data.Dataset):
         # Save metadata
         pickle.dump(metadata, open(self.metadata_path, 'wb'))
         return metadata
-
 
     def load_source(self, metadata, instr):
         should_print = (not dist.is_initialized() or dist.get_rank() == 0)
@@ -874,7 +886,6 @@ class MSSDataset(torch.utils.data.Dataset):
             source = self.augm_data(source, instr)
         return torch.tensor(source, dtype=torch.float32)
 
-
     def load_random_mix(self):
         res = []
         for instr in self.instruments:
@@ -900,7 +911,6 @@ class MSSDataset(torch.utils.data.Dataset):
             res.append(s1)
         res = torch.stack(res)
         return res
-
 
     def _load_chunk_by_offset(self, track_path, offset):
         """Load specific chunk by track path and offset"""
@@ -940,7 +950,6 @@ class MSSDataset(torch.utils.data.Dataset):
                 res[i] = self.augm_data(res[i], instr)
 
         return torch.tensor(res, dtype=torch.float32)
-
 
     def load_aligned_data(self):
         track_path, track_length = random.choice(self.metadata)
@@ -1011,7 +1020,6 @@ class MSSDataset(torch.utils.data.Dataset):
             for i, instr in enumerate(self.instruments):
                 res[i] = self.augm_data(res[i], instr)
         return torch.tensor(res, dtype=torch.float32), torch.tensor(mix, dtype=torch.float32)
-
 
     def augm_data(self, source, instr):
         # source.shape = (2, 261120) - first channels, second length
@@ -1143,11 +1151,11 @@ class MSSDataset(torch.utils.data.Dataset):
                         augs['pedalboard_reverb_width_max'],
                     )
                     board = PB.Pedalboard([PB.Reverb(
-                        room_size=room_size,  # 0.1 - 0.9
-                        damping=damping,  # 0.1 - 0.9
-                        wet_level=wet_level,  # 0.1 - 0.9
-                        dry_level=dry_level,  # 0.1 - 0.9
-                        width=width,  # 0.9 - 1.0
+                        room_size=room_size,
+                        damping=damping,
+                        wet_level=wet_level,
+                        dry_level=dry_level,
+                        width=width,
                         freeze_mode=0.0,
                     )])
                     source = board(source, 44100)
@@ -1291,5 +1299,4 @@ class MSSDataset(torch.utils.data.Dataset):
                     source = board(source, 44100)
                     applied_augs.append('pedalboard_mp3_compressor')
 
-        # print(applied_augs)
         return source
